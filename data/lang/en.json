@@ -1,0 +1,67 @@
+{
+  "_info": "FlipsiTherm UI language English (embedded baseline)",
+  "app": {
+    "title": "FlipsiTherm",
+    "subtitle": "Enclosure climate design",
+    "offline_badge": "Catalog state: {stand} (offline)",
+    "online_badge": "Catalog state: {stand} (refreshed)"
+  },
+  "steps": {
+    "1_title": "Enclosure & mounting",
+    "2_title": "Environment",
+    "3_title": "Components",
+    "4_title": "Result & report"
+  },
+  "fields": {
+    "width": "Width B (m)",
+    "height": "Height H (m)",
+    "depth": "Depth T (m)",
+    "material": "Material",
+    "mounting_rear": "Rear side",
+    "mounting_sides": "Sides",
+    "mounting_top": "Top",
+    "tMax": "Max. ambient temperature (°C)",
+    "tExp": "Expected ambient temperature (°C)",
+    "tMin": "Min. ambient temperature (°C)",
+    "rh": "Relative humidity (%)",
+    "tInMax": "Max. permitted internal temperature (°C)",
+    "tInMin": "Target internal temperature when heating (°C)",
+    "add_component": "Add component"
+  },
+  "mounting": {
+    "free": "free",
+    "wall": "against wall / bayed",
+    "covered": "covered (shelf/cable duct)"
+  },
+  "results": {
+    "solution_passive": "Passive operation sufficient",
+    "solution_filterfan": "Filter fan required",
+    "solution_heatexchanger": "Air/air heat exchanger (dusty/oily)",
+    "solution_cooling_unit": "Cooling unit required",
+    "q_cool": "Required cooling capacity",
+    "airflow": "Required air flow rate",
+    "heater": "Required heating power",
+    "dewpoint": "Dew point",
+    "condensation_note": "Condensation governs — use heater with hygrostat!",
+    "assumptions": "Assumptions made by the kernel",
+    "none": "none"
+  },
+  "report": {
+    "header": "Enclosure climate design report",
+    "customer": "Customer / project",
+    "inputs": "Input values",
+    "calculation": "Calculation",
+    "formula": "Formula",
+    "norm": "Norm reference",
+    "footer_note": "Created with FlipsiTherm — open calculation, all formulas documented.",
+    "print": "Print report (PDF)"
+  },
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "calculate": "Calculate",
+    "save_project": "Save project",
+    "load_project": "Load project",
+    "language": "Language"
+  }
+}

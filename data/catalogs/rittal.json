@@ -1,0 +1,17 @@
+{
+  "_info": "FlipsiTherm Community-Katalog — Rittal. Alle Datensätze sind Ausbaustufen-Typen (Familien), KEINE garantierten Artikeldaten. status=zu_verifizieren: Werte gegen aktuellen Rittal-Katalog prüfen vor verbindlicher Auslegung.",
+  "hersteller": "Rittal",
+  "stand": "2026-09-11",
+  "quelle_url": "https://www.rittal.com",
+  "devices": [
+    { "id": "rittal-h-100", "typ": "heizung", "bezeichnung": "Heizelement 100 W", "leistung_W": 100, "regelung": "Thermostat optional", "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-h-150", "typ": "heizung", "bezeichnung": "Heizelement 150 W", "leistung_W": 150, "regelung": "Thermostat", "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-h-250", "typ": "heizung", "bezeichnung": "Heizelement 250 W", "leistung_W": 250, "regelung": "Thermostat", "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-h-400", "typ": "heizung", "bezeichnung": "Heizelement 400 W", "leistung_W": 400, "regelung": "Thermostat", "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-ff-133", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~133 m³/h", "luftstrom_m3h": 133, "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-ff-285", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~285 m³/h", "luftstrom_m3h": 285, "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-ff-730", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~730 m³/h", "luftstrom_m3h": 730, "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-cu-1000", "typ": "kuehlgeraet", "bezeichnung": "Kühlgerät ~1,0 kW", "kuehlleistung_W": 1000, "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "rittal-cu-2500", "typ": "kuehlgeraet", "bezeichnung": "Kühlgerät ~2,5 kW", "kuehlleistung_W": 2500, "quell_url": "https://www.rittal.com", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" }
+  ]
+}

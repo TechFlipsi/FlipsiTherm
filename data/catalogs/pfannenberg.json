@@ -1,0 +1,14 @@
+{
+  "_info": "FlipsiTherm Community-Katalog — Pfannenberg. Ausbaustufen-Familien, keine garantierten Artikeldaten. status=zu_verifizieren.",
+  "hersteller": "Pfannenberg",
+  "stand": "2026-09-11",
+  "quelle_url": "https://www.pfannenberg.com/de/",
+  "devices": [
+    { "id": "pf-h-100", "typ": "heizung", "bezeichnung": "Heizgerät 100 W", "leistung_W": 100, "regelung": "Thermostat", "quell_url": "https://www.pfannenberg.com/de/klimatisierung/heizungen/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "pf-h-200", "typ": "heizung", "bezeichnung": "Heizgerät 200 W", "leistung_W": 200, "regelung": "Thermostat", "quell_url": "https://www.pfannenberg.com/de/klimatisierung/heizungen/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "pf-ff-100", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~100 m³/h", "luftstrom_m3h": 100, "quell_url": "https://www.pfannenberg.com/de/klimatisierung/filterluefter/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "pf-ff-250", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~250 m³/h", "luftstrom_m3h": 250, "quell_url": "https://www.pfannenberg.com/de/klimatisierung/filterluefter/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "pf-ff-450", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~450 m³/h", "luftstrom_m3h": 450, "quell_url": "https://www.pfannenberg.com/de/klimatisierung/filterluefter/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "pf-cu-1500", "typ": "kuehlgeraet", "bezeichnung": "Kühlgerät ~1,5 kW", "kuehlleistung_W": 1500, "quell_url": "https://www.pfannenberg.com/de/klimatisierung/kuehlgeraete/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" }
+  ]
+}

@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlipsiTherm — Schaltschrank-Klimaauslegung</title>
+<style>
+:root{
+  --accent:#0f4c81;--accent-dark:#0a3358;--bg:#f4f6f9;--card:#ffffff;--ink:#1c2733;
+  --ink-soft:#5a6a7a;--line:#dde4ec;--ok:#1e7d32;--warn:#b25e09;--bad:#b3261e;
+  --radius:10px;--shadow:0 1px 3px rgba(16,34,54,.08),0 4px 16px rgba(16,34,54,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:24px 16px 64px}
+header.top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:1.55rem;letter-spacing:.2px;color:var(--accent-dark)}
+h1 .sub{font-size:.85rem;color:var(--ink-soft);font-weight:400;margin-left:6px}
+.badge{font-size:.75rem;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+.badge.online{color:var(--ok);border-color:var(--ok)}
+.steps{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.step{flex:1;min-width:150px;padding:8px 12px;border-radius:var(--radius);background:var(--card);border:1px solid var(--line);font-size:.85rem;color:var(--ink-soft);cursor:pointer;transition:all .15s}
+.step.active{border-color:var(--accent);color:var(--accent);font-weight:600;box-shadow:var(--shadow)}
+.step.done{color:var(--ok)}
+.step b{display:block;font-size:.75rem;font-weight:600;opacity:.7}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card h2{font-size:1.05rem;margin-bottom:14px;color:var(--accent-dark)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+label{display:block;font-size:.78rem;color:var(--ink-soft);margin-bottom:4px;font-weight:600}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+fieldset{border:none;margin:14px 0}
+fieldset legend{font-size:.8rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+.hint{font-size:.76rem;color:var(--ink-soft);margin-top:4px}
+.btn{display:inline-block;padding:10px 20px;border:none;border-radius:8px;font-size:.92rem;cursor:pointer;background:var(--accent);color:#fff;font-weight:600}
+.btn:hover{background:var(--accent-dark)}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.small{padding:6px 12px;font-size:.8rem}
+.btnrow{display:flex;gap:10px;justify-content:space-between;margin-top:18px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.kpi .box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--radius);padding:14px}
+.kpi .box h3{font-size:.75rem;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.kpi .box .val{font-size:1.5rem;font-weight:700;color:var(--accent-dark)}
+.kpi .box .sub{font-size:.75rem;color:var(--ink-soft)}
+.verdict{padding:14px 16px;border-radius:var(--radius);margin-bottom:16px;font-weight:600;background:#e8f0fb;border:1px solid var(--accent);color:var(--accent-dark)}
+details{margin-top:10px}
+summary{cursor:pointer;font-size:.85rem;color:var(--accent);font-weight:600}
+details .inner{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:8px;font-size:.82rem}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--ink-soft);font-weight:600}
+.menu{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.menu select{width:auto;padding:6px 8px;font-size:.8rem}
+#report{display:none}
+.report-page{background:#fff;padding:32px 40px;border:1px solid var(--line);border-radius:var(--radius)}
+.report h1{font-size:1.25rem;margin-bottom:4px}
+.report .meta{font-size:.8rem;color:var(--ink-soft);margin-bottom:18px}
+.report table{width:100%;font-size:.8rem;margin-bottom:14px}
+.report .norm{color:var(--ink-soft);font-style:italic}
+.report h2{font-size:.95rem;margin:16px 0 8px;color:var(--accent-dark)}
+.report .foot{font-size:.72rem;color:var(--ink-soft);margin-top:24px;border-top:1px solid var(--line);padding-top:8px}
+@media print{
+  body{background:#fff}
+  .wrap>*:not(#report){display:none!important}
+  #report{display:block!important}
+  #report .report-page{border:none;box-shadow:none;padding:0}
+}
+@media(max-width:640px){.step{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>FlipsiTherm<span class="sub" data-i18n="app.subtitle">Schaltschrank-Klimaauslegung</span></h1>
+    <span id="catalogBadge" class="badge">…</span>
+  </header>
+  <div class="menu">
+    <select id="langSel" style="width:auto"></select>
+    <button class="btn ghost small" id="btnSave" data-i18n="common.save_project">Projekt speichern</button>
+    <button class="btn ghost small" id="btnLoad" data-i18n="common.load_project">Projekt laden</button>
+    <button class="btn ghost small" id="btnCustomCat">Firmen-Katalog laden</button>
+    <input type="file" id="fileProject" accept=".json" style="display:none">
+    <input type="file" id="fileCustomCat" accept=".json" style="display:none">
+  </div>
+  <div class="steps" id="stepsBar"></div>
+  <div id="main"></div>
+  <div id="report"></div>
+</div>
+
+<script>/**
+ * FlipsiTherm Rechenkern v0.1
+ * Herstellerneutrale Schaltschrank-Klimaauslegung
+ *
+ * Norm-Bezug (Implementierung aus offenen Sekundärquellen, Normtexte nicht kopiert):
+ *  - IEC TR 60890 (DE: DIN VDE 0660-507): Temperaturerhöhung, b-Faktoren der Oberflächen
+ *  - EN 61439-1 Abschnitt 7.1: Übliche Betriebsbedingungen (Umgebungstemperaturen, Feuchte)
+ *  - Taupunkt: Magnus-Formel (DIN ISO 18454-Bereich gültig für 0–60 °C, φ 1–100 %)
+ *
+ * Grundsatz: KEINE stillen Annahmen. Jede Annahme erscheint im Ergebnis als "assumptions".
+ */
+(function (root, factory) {
+  "use strict";
+  if (typeof module === "object" && module.exports) { module.exports = factory(); }
+  else { root.FlipsiThermKernel = factory(); }
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  // ---------- Konstanten ----------
+
+  /** Wärmedurchgangskoeffizienten W/(m²·K) je Werkstoff (offene Fachquellen: FISEKON, TGB) */
+  var K_VALUES = {
+    "stahl_lackiert": 5.5,
+    "edelstahl": 3.7,
+    "aluminium": 12.0,
+    "polyester": 3.5,
+    "doppelwand": 4.5
+  };
+
+  /** Oberflächen-b-Faktoren in Anlehnung an IEC TR 60890 (veröffentlicht u. a. bei B&R) */
+  var SURFACE_FACTORS = {
+    front: 0.9,               // Türen/Vorderseite, immer frei
+    rear_free: 0.9,           // Rückseite frei
+    rear_wall: 0.7,           // Rückseite an Wand
+    side_free: 0.9,           // Seitenfläche frei
+    side_wall: 0.7,           // Seitenfläche an Wand / in Anreihung
+    top_free: 1.4,            // Oberseite frei umströmt
+    top_covered: 0.7,         // Oberseite abgedeckt (Bühne, Kabelboden, Dach)
+    bottom: 0.7               // Bodenfläche (stehend auf Boden)
+  };
+
+  /** Sicherheitszuschlag Heizleistung */
+  var HEATING_RESERVE = 1.15;
+
+  /** Luftvolumenstrom-Faktor m³·K/(W·h) bei Meereshöhe (Kehrwert ρ·cp, auf Stunde) */
+  var AIR_FLOW_FACTOR = 3.1;
+
+  /** EN 61439-1 / 7.1 Defaults */
+  var EN61439 = {
+    indoor: { tMax: 40, tMax24h: 35, tMin: -5 },
+    outdoor: { tMax: 40, tMax24h: 35, tMin: -25 }
+  };
+
+  // ---------- Hilfsfunktionen ----------
+
+  function round(x, digits) {
+    var f = Math.pow(10, digits == null ? 1 : digits);
+    return Math.round(x * f) / f;
+  }
+
+  function clamp(x, lo, hi) { return Math.min(Math.max(x, lo), hi); }
+
+  /**
+   * Taupunkt nach Magnus (Parametersatz 2, gültig über Wasser, 0…+60 °C Umgebung).
+   * @returns {number} Taupunkt in °C
+   */
+  function dewPoint(tC, rhPercent) {
+    var rh = clamp(rhPercent, 1, 100) / 100;
+    var a = Math.log(rh) + (17.62 * tC) / (243.12 + tC);
+    return (243.12 * a) / (17.62 - a);
+  }
+
+  /**
+   * Wirksame Oberfläche nach b-Faktoren (IEC TR 60890-Muster).
+   * @param {object} e enclosure {widthB, heightH, depthT} in Metern
+   * @param {object} m  mounting {rear: "free"|"wall", sides: "free"|"wall", top: "free"|"covered", model: "iec60890"|"fisekon_simplified"}
+   * @returns {{area: number, breakdown: object}} Fläche in m² + Nachweis je Fläche
+   */
+  function effectiveSurface(e, m) {
+    var B = e.widthB, H = e.heightH, T = e.depthT;
+    var fRear = m.rear === "wall" ? SURFACE_FACTORS.rear_wall : SURFACE_FACTORS.rear_free;
+    var fSide = m.sides === "wall" ? SURFACE_FACTORS.side_wall : SURFACE_FACTORS.side_free;
+    var fTop = m.top === "covered" ? SURFACE_FACTORS.top_covered : SURFACE_FACTORS.top_free;
+    var parts = {
+      front: { factor: SURFACE_FACTORS.front, raw: B * H, area: SURFACE_FACTORS.front * B * H },
+      rear: { factor: fRear, raw: B * H, raw_note: m.rear === "wall" ? "an Wand" : "frei", area: fRear * B * H },
+      sideLeft: { factor: fSide, raw: T * H, raw_note: m.sides === "wall" ? "an Wand/Anreihung" : "frei", area: fSide * T * H },
+      sideRight: { factor: fSide, raw: T * H, area: fSide * T * H },
+      top: { factor: fTop, raw: B * T, raw_note: m.top === "covered" ? "abgedeckt" : "frei", area: fTop * B * T },
+      bottom: { factor: SURFACE_FACTORS.bottom, raw: B * T, area: SURFACE_FACTORS.bottom * B * T }
+    };
+    var area = 0, k;
+    for (k in parts) { area += parts[k].area; }
+    // FISEKON-kompatible Vereinfachung (Boden entfällt): für Golden-File-Abgleich
+    if (m.model === "fisekon_simplified") { area -= parts.bottom.area; }
+    return { area: round(area, 3), breakdown: parts, model: m.model || "iec60890" };
+  }
+
+  /**
+   * Verlustleistung einer Komponente.
+   * Typen: direct | power_supply | drive | transformer | motor | netfilter
+   * @returns {{losses: number, formula: string, assumption: string|null}}
+   */
+  function componentLosses(c) {
+    var f = c.loadFactor == null ? 1.0 : clamp(c.loadFactor, 0, 1);
+    var eta, losses, formula, assumption = null;
+    switch (c.type) {
+      case "direct":
+        return { losses: c.watts * f, formula: "P_v = " + c.watts + " W · a=" + f + " (Datenblatt · Auslastung)", assumption: null };
+      case "power_supply":
+        eta = c.efficiency == null ? 0.93 : c.efficiency; // typ. Netzteil, offene Fachquellen
+        assumption = c.efficiency == null ? "η=0,93 angenommen (typ. Schaltnetzteil)" : null;
+        // P_v = P_out · (1−η)/η · Auslastung
+        return {
+          losses: c.P_out_W * (1 - eta) / eta * f,
+          formula: "P_v = P_out · (1−η)/η · a = " + c.P_out_W + " · (1−" + eta + ")/" + eta + " · " + f,
+          assumption: assumption
+        };
+      case "drive":
+        eta = c.efficiency == null ? 0.97 : c.efficiency; // ~3 % Verlust, r/PLC-Praxis
+        assumption = c.efficiency == null ? "η=0,97 für Umrichter angenommen (Forum-/Herstellertabellen)" : null;
+        return {
+          losses: c.P_N_W * (1 - eta) / eta * f,
+          formula: "P_v = P_N · (1−η)/η · a = " + c.P_N_W + " W · (1−" + eta + ")/" + eta + " · " + f,
+          assumption: assumption
+        };
+      case "transformer":
+        eta = c.efficiency == null ? 0.95 : c.efficiency;
+        assumption = c.efficiency == null ? "η=0,95 für Trafo angenommen" : null;
+        return {
+          losses: c.P_N_W * (1 - eta) / eta * f,
+          formula: "P_v = P_N · (1−η)/η · a",
+          assumption: assumption
+        };
+      case "motor":
+        eta = c.efficiency == null ? 0.85 : c.efficiency;
+        assumption = c.efficiency == null ? "η=0,85 für Motor angenommen" : null;
+        return {
+          losses: c.P_mech_W * (1 - eta) / eta * f,
+          formula: "P_v = P_mech · (1−η)/η · a",
+          assumption: assumption
+        };
+      case "netfilter":
+        // Forum-Falle: Verlust über Spannungsfall ΔU bei Betriebsstrom, NIEMALS U·I
+        var dU = c.deltaU_V == null ? 0.5 : c.deltaU_V;
+        assumption = c.deltaU_V == null ? "ΔU=0,5 V angenommen (typ. Einfügedämpfung Netzfilter)" : null;
+        return {
+          losses: dU * c.I_load_A * f,
+          formula: "P_v = ΔU · I_b = " + dU + " V · " + c.I_load_A + " A · " + f,
+          assumption: assumption
+        };
+      default:
+        throw new Error("Unbekannter Komponententyp: " + c.type);
+    }
+  }
+
+  /** Summierte Verlustleistung aller Komponenten inkl. Herleitung je Komponente */
+  function internalLosses(components) {
+    var total = 0, idle = 0, details = [], assumptions = [], i, r;
+    for (i = 0; i < components.length; i++) {
+      r = componentLosses(components[i]);
+      total += r.losses;
+      details.push({ name: components[i].name || components[i].type, losses: round(r.losses, 1), formula: r.formula, assumption: r.assumption });
+      if (r.assumption) { assumptions.push(components[i].name + ": " + r.assumption); }
+      if (components[i].countsAtIdle) { idle += r.losses; } // z. B. Netzteile im Standby
+    }
+    return { total: round(total, 1), idle: round(idle, 1), details: details, assumptions: assumptions };
+  }
+
+  // ---------- Hauptberechnung ----------
+
+  /**
+   * Vollständige Klimaauslegung.
+   * @param {object} input  s. docs/RECHENMETHOD.md §Eingaben
+   * @returns {object} strukturiertes Ergebnis (Grundlage für UI + Protokoll)
+   */
+  function calculate(input) {
+    var e = input.enclosure;          // {widthB, heightH, depthT} in m
+    var m = input.mounting || {};     // {rear, sides, top, model}
+    var env = input.environment;      // {tMax, tMin, rhPercent, altitude_m?, indoorOutdoor?}
+    var tInMax = input.target.tInMax; // zulässige Innentemperatur °C
+    var tInMin = input.target.tInMin; // Ziel-Innentemperatur beim Heizen °C
+    var losses = internalLosses(input.components || []);
+    var surf = effectiveSurface(e, m);
+    var k = K_VALUES[input.material] || K_VALUES.stahl_lackiert;
+    var assumptions = losses.assumptions.slice();
+
+    if (env.altitude_m != null && env.altitude_m > 1000) {
+      assumptions.push("Höhe über NN " + env.altitude_m + " m: Luftdichte-Korrektur des Volumenstroms ist v0.2 vorbehalten (Ergebnis konservativ ohne Korrektur)");
+    }
+
+    // --- Kühlung ---
+    var dT_cool = tInMax - env.tMax;
+    var shellDiss_cool = k * surf.area * dT_pos(dT_cool);
+    var qCool = round(Math.max(0, losses.total - shellDiss_cool), 1);
+    var fanPossible = dT_cool > 0;
+    var airflow = fanPossible && qCool > 0 ? round(AIR_FLOW_FACTOR * qCool / dT_cool, 0) : 0;
+
+    var solution; // Passiv | filterfan | heatexchanger | cooling_unit
+    if (qCool <= 0) {
+      solution = "passive";
+    } else if (fanPossible) {
+      solution = "filterfan"; // L/L-WTA als Alternative bei Schmutz/Öl — UI-Hinweis
+    } else {
+      solution = "cooling_unit";
+    }
+
+    // --- Heizung ---
+    // Taupunkt-Referenz: erwartete Umgebung (tExp, φ) — FISEKON-Konvention. Der Schrank
+    // kühlt im Stillstand Richtung tMin; Kondensat entsteht, wenn er unter τ(tExp, φ) fällt.
+    var tExp = env.tExp == null ? 25 : env.tExp;
+    if (env.tExp == null) { assumptions.push("Erwartete Umgebungstemperatur nicht angegeben: tExp=25 °C angenommen (Taupunkt-Referenz, FISEKON-Konvention)"); }
+    var dewRef = dewPoint(tExp, env.rhPercent);
+    var dT_heat_frost = tInMin - env.tMin;
+    var dT_heat_dew = dewRef - env.tMin;
+    var loss_frost = k * surf.area * Math.max(dT_heat_frost, 0);
+    var loss_dew = k * surf.area * Math.max(dT_heat_dew, 0);
+    var pFrost = round(Math.max(0, (loss_frost - losses.idle) * HEATING_RESERVE), 0);
+    var pDew = round(Math.max(0, (loss_dew - losses.idle) * HEATING_RESERVE), 0);
+    var pHeater = Math.max(pFrost, pDew);
+    var condensationGoverns = pDew > pFrost;
+    if (dewRef > tInMin) {
+      assumptions.push("Taupunkt " + round(dewRef, 1) + " °C liegt ÜBER der Ziel-Innentemperatur " + tInMin + " °C: Heizungs-Sollwert muss mindestens auf den Taupunkt gestellt werden, sonst Betauung trotz Heizbetrieb");
+    }
+
+    return {
+      meta: {
+        tool: "FlipsiTherm", version: "0.1.0",
+        normRefs: [
+          "IEC TR 60890 (DE: DIN VDE 0660-507) — Temperaturerhöhung / b-Faktoren",
+          "EN 61439-1 Abschnitt 7.1 — Übliche Betriebsbedingungen"
+        ]
+      },
+      surface: surf,
+      kValue: k,
+      losses: losses,
+      environment: env,
+      target: input.target,
+      cooling: {
+        dT: round(dT_cool, 1),
+        shellDissipation: round(shellDiss_cool, 1),
+        qCool: qCool,
+        airflow_m3h: airflow,
+        fanPossible: fanPossible,
+        solution: solution,
+        note: solution === "cooling_unit"
+          ? "Umgebung ≥ zulässige Innentemperatur: Filterlüfter/Lüftung wirkungslos, Kühlgerät erforderlich (Ein Lüfter kann nicht unter Umgebungstemperatur kühlen)."
+          : (solution === "filterfan" ? "Bei starker Verschmutzung/Öl: Luft-Luft-Wärmetauscher als geschlossene Alternative zum Filterlüfter." : "Passiver Betrieb ausreichend: die Hülle führt die Verlustwärme vollständig ab.")
+      },
+      heating: {
+        tAmbMin: env.tMin,
+        tExp: tExp,
+        dewPoint: round(dewRef, 1),
+        dTFrost: round(dT_heat_frost, 1),
+        dTDew: round(dT_heat_dew, 1),
+        lossFrost: round(loss_frost, 0),
+        lossDew: round(loss_dew, 0),
+        pFrost: pFrost,
+        pDew: pDew,
+        required: pHeater,
+        condensationGoverns: condensationGoverns,
+        note: condensationGoverns
+          ? "Betauung ist bemessungsrelevant: Taupunkt " + round(dewRef, 1) + " °C (bei erwarteter Umgebung " + tExp + " °C / " + env.rhPercent + " % r. F.) liegt über der minimalen Umgebungstemperatur " + env.tMin + " °C. Heizung mit Hygrostat wählen."
+          : "Frostschutz ist bemessungsrelevant."
+      },
+      assumptions: assumptions
+    };
+  }
+
+  function dT_pos(dT) { return Math.max(dT, 0); }
+
+  // Öffentliches API
+  return {
+    K_VALUES: K_VALUES,
+    SURFACE_FACTORS: SURFACE_FACTORS,
+    EN61439: EN61439,
+    dewPoint: dewPoint,
+    effectiveSurface: effectiveSurface,
+    componentLosses: componentLosses,
+    internalLosses: internalLosses,
+    calculate: calculate
+  };
+});</script>
+<script>
+"use strict";
+/* FlipsiTherm UI v0.1 — Vanilla JS, ohne Abhängigkeiten. Online-Modell: Daten-only. */
+
+var EMBEDDED = {"config":{"autoUpdate":true,"catalogFiles":["nvent-hoffman.json","pfannenberg.json","rittal.json","stego.json"],"catalogStand":"2026-09-11"},"catalogs":[{"_info":"FlipsiTherm Community-Katalog — nVent HOFFMAN. Ausbaustufen-Familien, keine garantierten Artikeldaten. status=zu_verifizieren.","hersteller":"nVent HOFFMAN","stand":"2026-09-11","quelle_url":"https://www.nvent.com/de-de/hoffman","devices":[{"id":"nv-h-100","typ":"heizung","bezeichnung":"Heizgerät 100 W","leistung_W":100,"regelung":"Thermostat","quell_url":"https://www.nvent.com/de-de/hoffman","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"nv-h-200","typ":"heizung","bezeichnung":"Heizgerät 200 W","leistung_W":200,"regelung":"Thermostat","quell_url":"https://www.nvent.com/de-de/hoffman","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"nv-ff-100","typ":"filterluefter","bezeichnung":"Filterlüfter ~100 m³/h","luftstrom_m3h":100,"quell_url":"https://www.nvent.com/de-de/hoffman","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"nv-ff-300","typ":"filterluefter","bezeichnung":"Filterlüfter ~300 m³/h","luftstrom_m3h":300,"quell_url":"https://www.nvent.com/de-de/hoffman","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"nv-ff-600","typ":"filterluefter","bezeichnung":"Filterlüfter ~600 m³/h","luftstrom_m3h":600,"quell_url":"https://www.nvent.com/de-de/hoffman","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"nv-cu-2000","typ":"kuehlgeraet","bezeichnung":"Kühlgerät ~2,0 kW","kuehlleistung_W":2000,"quell_url":"https://www.nvent.com/de-de/hoffman","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"}]},{"_info":"FlipsiTherm Community-Katalog — Pfannenberg. Ausbaustufen-Familien, keine garantierten Artikeldaten. status=zu_verifizieren.","hersteller":"Pfannenberg","stand":"2026-09-11","quelle_url":"https://www.pfannenberg.com/de/","devices":[{"id":"pf-h-100","typ":"heizung","bezeichnung":"Heizgerät 100 W","leistung_W":100,"regelung":"Thermostat","quell_url":"https://www.pfannenberg.com/de/klimatisierung/heizungen/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"pf-h-200","typ":"heizung","bezeichnung":"Heizgerät 200 W","leistung_W":200,"regelung":"Thermostat","quell_url":"https://www.pfannenberg.com/de/klimatisierung/heizungen/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"pf-ff-100","typ":"filterluefter","bezeichnung":"Filterlüfter ~100 m³/h","luftstrom_m3h":100,"quell_url":"https://www.pfannenberg.com/de/klimatisierung/filterluefter/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"pf-ff-250","typ":"filterluefter","bezeichnung":"Filterlüfter ~250 m³/h","luftstrom_m3h":250,"quell_url":"https://www.pfannenberg.com/de/klimatisierung/filterluefter/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"pf-ff-450","typ":"filterluefter","bezeichnung":"Filterlüfter ~450 m³/h","luftstrom_m3h":450,"quell_url":"https://www.pfannenberg.com/de/klimatisierung/filterluefter/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"pf-cu-1500","typ":"kuehlgeraet","bezeichnung":"Kühlgerät ~1,5 kW","kuehlleistung_W":1500,"quell_url":"https://www.pfannenberg.com/de/klimatisierung/kuehlgeraete/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"}]},{"_info":"FlipsiTherm Community-Katalog — Rittal. Alle Datensätze sind Ausbaustufen-Typen (Familien), KEINE garantierten Artikeldaten. status=zu_verifizieren: Werte gegen aktuellen Rittal-Katalog prüfen vor verbindlicher Auslegung.","hersteller":"Rittal","stand":"2026-09-11","quelle_url":"https://www.rittal.com","devices":[{"id":"rittal-h-100","typ":"heizung","bezeichnung":"Heizelement 100 W","leistung_W":100,"regelung":"Thermostat optional","quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-h-150","typ":"heizung","bezeichnung":"Heizelement 150 W","leistung_W":150,"regelung":"Thermostat","quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-h-250","typ":"heizung","bezeichnung":"Heizelement 250 W","leistung_W":250,"regelung":"Thermostat","quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-h-400","typ":"heizung","bezeichnung":"Heizelement 400 W","leistung_W":400,"regelung":"Thermostat","quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-ff-133","typ":"filterluefter","bezeichnung":"Filterlüfter ~133 m³/h","luftstrom_m3h":133,"quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-ff-285","typ":"filterluefter","bezeichnung":"Filterlüfter ~285 m³/h","luftstrom_m3h":285,"quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-ff-730","typ":"filterluefter","bezeichnung":"Filterlüfter ~730 m³/h","luftstrom_m3h":730,"quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-cu-1000","typ":"kuehlgeraet","bezeichnung":"Kühlgerät ~1,0 kW","kuehlleistung_W":1000,"quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"rittal-cu-2500","typ":"kuehlgeraet","bezeichnung":"Kühlgerät ~2,5 kW","kuehlleistung_W":2500,"quell_url":"https://www.rittal.com","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"}]},{"_info":"FlipsiTherm Community-Katalog — STEGO. Ausbaustufen-Familien, keine garantierten Artikeldaten. status=zu_verifizieren: Werte gegen aktuellen STEGO-Katalog prüfen.","hersteller":"STEGO","stand":"2026-09-11","quelle_url":"https://www.stego-group.com/de/","devices":[{"id":"stego-h-050","typ":"heizung","bezeichnung":"Heizgerät 50 W","leistung_W":50,"regelung":"Thermostat","quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"stego-h-100","typ":"heizung","bezeichnung":"Heizgerät 100 W","leistung_W":100,"regelung":"Thermostat","quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"stego-h-150","typ":"heizung","bezeichnung":"Heizgerät 150 W","leistung_W":150,"regelung":"Thermostat","quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"stego-h-250","typ":"heizung","bezeichnung":"Heizgerät 250 W","leistung_W":250,"regelung":"Thermostat","quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"stego-ff-075","typ":"filterluefter","bezeichnung":"Filterlüfter ~75 m³/h","luftstrom_m3h":75,"quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"stego-ff-160","typ":"filterluefter","bezeichnung":"Filterlüfter ~160 m³/h","luftstrom_m3h":160,"quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"stego-ff-330","typ":"filterluefter","bezeichnung":"Filterlüfter ~330 m³/h","luftstrom_m3h":330,"quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"},{"id":"stego-ff-600","typ":"filterluefter","bezeichnung":"Filterlüfter ~600 m³/h","luftstrom_m3h":600,"quell_url":"https://www.stego-group.com/de/","zuletzt_geprueft":"2026-09-11","status":"zu_verifizieren"}]}],"lang":{"de":{"_info":"FlipsiTherm UI-Sprache Deutsch (Basislinie, im HTML eingebettet)","app":{"title":"FlipsiTherm","subtitle":"Schaltschrank-Klimaauslegung","offline_badge":"Katalog-Stand: {stand} (offline)","online_badge":"Katalog-Stand: {stand} (aktualisiert)"},"steps":{"1_title":"Schrank & Aufstellung","2_title":"Umgebung","3_title":"Komponenten","4_title":"Ergebnis & Protokoll"},"fields":{"width":"Breite B (m)","height":"Höhe H (m)","depth":"Tiefe T (m)","material":"Werkstoff","mounting_rear":"Rückseite","mounting_sides":"Seiten","mounting_top":"Oberseite","tMax":"Maximale Umgebungstemperatur (°C)","tExp":"Erwartete Umgebungstemperatur (°C)","tMin":"Minimale Umgebungstemperatur (°C)","rh":"Relative Luftfeuchte (%)","tInMax":"Zulässige Innentemperatur max. (°C)","tInMin":"Ziel-Innentemperatur beim Heizen (°C)","add_component":"Komponente hinzufügen"},"mounting":{"free":"frei","wall":"an Wand / Anreihung","covered":"abgedeckt (Bühne/Kabelboden)"},"results":{"solution_passive":"Passivbetrieb ausreichend","solution_filterfan":"Filterlüfter erforderlich","solution_heatexchanger":"Luft-Luft-Wärmetauscher (bei Schmutz/Öl)","solution_cooling_unit":"Kühlgerät erforderlich","q_cool":"Erforderliche Kühlleistung","airflow":"Erforderlicher Luftvolumenstrom","heater":"Erforderliche Heizleistung","dewpoint":"Taupunkt","condensation_note":"Betauung bemessungsrelevant — Heizung mit Hygrostat!","assumptions":"Annahmen des Rechenkerns","none":"keine"},"report":{"header":"Auslegungsprotokoll Schaltschrankklimatisierung","customer":"Kunde / Projekt","inputs":"Eingabewerte","calculation":"Berechnung","formula":"Formel","norm":"Norm-Bezug","footer_note":"Erstellt mit FlipsiTherm — offene Rechnung, alle Formeln im Repo dokumentiert.","print":"Protokoll drucken (PDF)"},"common":{"back":"Zurück","next":"Weiter","calculate":"Berechnen","save_project":"Projekt speichern","load_project":"Projekt laden","language":"Sprache"}},"en":{"_info":"FlipsiTherm UI language English (embedded baseline)","app":{"title":"FlipsiTherm","subtitle":"Enclosure climate design","offline_badge":"Catalog state: {stand} (offline)","online_badge":"Catalog state: {stand} (refreshed)"},"steps":{"1_title":"Enclosure & mounting","2_title":"Environment","3_title":"Components","4_title":"Result & report"},"fields":{"width":"Width B (m)","height":"Height H (m)","depth":"Depth T (m)","material":"Material","mounting_rear":"Rear side","mounting_sides":"Sides","mounting_top":"Top","tMax":"Max. ambient temperature (°C)","tExp":"Expected ambient temperature (°C)","tMin":"Min. ambient temperature (°C)","rh":"Relative humidity (%)","tInMax":"Max. permitted internal temperature (°C)","tInMin":"Target internal temperature when heating (°C)","add_component":"Add component"},"mounting":{"free":"free","wall":"against wall / bayed","covered":"covered (shelf/cable duct)"},"results":{"solution_passive":"Passive operation sufficient","solution_filterfan":"Filter fan required","solution_heatexchanger":"Air/air heat exchanger (dusty/oily)","solution_cooling_unit":"Cooling unit required","q_cool":"Required cooling capacity","airflow":"Required air flow rate","heater":"Required heating power","dewpoint":"Dew point","condensation_note":"Condensation governs — use heater with hygrostat!","assumptions":"Assumptions made by the kernel","none":"none"},"report":{"header":"Enclosure climate design report","customer":"Customer / project","inputs":"Input values","calculation":"Calculation","formula":"Formula","norm":"Norm reference","footer_note":"Created with FlipsiTherm — open calculation, all formulas documented.","print":"Print report (PDF)"},"common":{"back":"Back","next":"Next","calculate":"Calculate","save_project":"Save project","load_project":"Load project","language":"Language"}}}};
+var DATA_BASE = "https://raw.githubusercontent.com/TechFlipsi/FlipsiTherm/main/";
+
+var state = {
+  step: 1,
+  lang: (navigator.language||"de").slice(0,2)==="de" ? "de" : "en",
+  project: {
+    customer: {name:"", ref:""},
+    enclosure: {widthB:0.8, heightH:2.0, depthT:0.6},
+    mounting: {rear:"free", sides:"free", top:"free", model:"iec60890"},
+    material: "stahl_lackiert",
+    environment: {tMax:35, tExp:25, tMin:-10, rhPercent:60},
+    target: {tInMax:35, tInMin:5},
+    components: []
+  },
+  firmCatalog: null,
+  customDevs: [],
+  catDevices: [],
+  lastResult: null
+};
+
+/* ---------- i18n ---------- */
+function t(key, vars){
+  var src = EMBEDDED.lang[state.lang] || {};
+  var s = (src[key] != null) ? src[key] : (EMBEDDED.lang.de[key] != null ? EMBEDDED.lang.de[key] : key);
+  if (vars) for (var k in vars) s = s.replace("{"+k+"}", vars[k]);
+  return s;
+}
+function flatten(obj, prefix){
+  var out={};
+  (function walk(o,p){ for (var k in o){ if (o[k] && typeof o[k]==="object") walk(o[k], p+k+"."); else out[p+k]=String(o[k]); } })(obj, prefix||"");
+  return out;
+}
+function applyI18n(){
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
+  renderSteps(); renderStep();
+}
+
+/* ---------- Kataloge ---------- */
+function mergeCatalogs(){
+  state.catDevices = [];
+  EMBEDDED.catalogs.forEach(function(c){ c.devices.forEach(function(d){ state.catDevices.push(Object.assign({},d,{layer:1,hersteller:c.hersteller})); }); });
+  (state.firmCatalog && state.firmCatalog.devices || []).forEach(function(d){ state.catDevices.push(Object.assign({},d,{layer:2})); });
+  state.customDevs.forEach(function(d){ state.catDevices.push(Object.assign({},d,{layer:3})); });
+}
+function fetchJSON(url){ return fetch(url).then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }); }
+function setBadge(stand, online){
+  var b=document.getElementById("catalogBadge");
+  b.textContent = t(online?"app.online_badge":"app.offline_badge", {stand:stand});
+  b.classList.toggle("online", !!online);
+}
+async function autoRefresh(){ // NUR Daten nachladen (JSON) — niemals Code
+  if (!EMBEDDED.config.autoUpdate || !navigator.onLine){ setBadge(EMBEDDED.config.catalogStand, false); return; }
+  try{
+    var fetched = await Promise.all(EMBEDDED.config.catalogFiles.map(function(f){ return fetchJSON(DATA_BASE+"data/catalogs/"+f); }));
+    if (fetched && fetched.length){
+      EMBEDDED.catalogs = fetched;
+      EMBEDDED.config.catalogStand = (fetched[0] && fetched[0].stand) || EMBEDDED.config.catalogStand;
+    }
+    var langIdx = await fetchJSON(DATA_BASE+"data/lang/index.json").catch(function(){ return {languages:[]}; });
+    for (var li of (langIdx.languages||[])){
+      try{ var raw = await fetchJSON(DATA_BASE+"data/lang/"+li+".json"); EMBEDDED.lang[li] = flatten(raw); }catch(e){}
+    }
+    refreshLangMenu();
+    setBadge(EMBEDDED.config.catalogStand, true);
+    mergeCatalogs();
+  }catch(e){ setBadge(EMBEDDED.config.catalogStand, false); }
+}
+function refreshLangMenu(){
+  var sel=document.getElementById("langSel"); var cur=sel.value; sel.innerHTML="";
+  Object.keys(EMBEDDED.lang).sort().forEach(function(l){
+    var o=document.createElement("option"); o.value=l; o.textContent=l.toUpperCase(); sel.appendChild(o);
+  });
+  sel.value=cur;
+}
+
+/* ---------- Wizard ---------- */
+var STEPS=["1_title","2_title","3_title","4_title"];
+function renderSteps(){
+  var bar=document.getElementById("stepsBar"); bar.innerHTML="";
+  STEPS.forEach(function(s,i){
+    var d=document.createElement("div");
+    d.className="step"+(state.step===i+1?" active":(state.step>i+1?" done":""));
+    d.innerHTML="<b>"+(i+1)+"</b>"+t("steps."+s);
+    d.onclick=function(){ goto(i+1); };
+    bar.appendChild(d);
+  });
+}
+function goto(n){ state.step=n; renderSteps(); renderStep(); window.scrollTo(0,0); }
+
+/* ---------- Eingabehelfer ---------- */
+function getPath(path,key){ return path.split(".").reduce(function(o,k){ return o[k]; }, state.project)[key]; }
+function setPath(path,key,val){ path.split(".").reduce(function(o,k){ return o[k]; }, state.project)[key]=val; }
+function esc(s){ return String(s).replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+function numInput(label, key, step, stepAttr){
+  return '<div><label>'+label+'</label><input type="number" step="'+(stepAttr||"0.1")+'" value="'+esc(getPath(step,key))+'" data-bind="'+key+'" data-step="'+step+'"></div>';
+}
+function bindInputs(container){
+  container.querySelectorAll("input[data-bind]").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      setPath(inp.getAttribute("data-step"), inp.getAttribute("data-bind"), parseFloat(inp.value||"0"));
+    });
+  });
+  container.querySelectorAll("select[data-bind]").forEach(function(sel){
+    sel.addEventListener("change", function(){
+      if (sel.getAttribute("data-step")==="_material"){ state.project.material=sel.value; }
+      else { setPath(sel.getAttribute("data-step"), sel.getAttribute("data-bind"), sel.value); }
+    });
+  });
+}
+function selVal(sel){ return state.project.mounting[sel.getAttribute("data-bind")]===sel.value; }
+
+/* ---------- Steps ---------- */
+function renderStep(){
+  var root=document.getElementById("main");
+  var p=state.project;
+  if (state.step===1){
+    root.innerHTML='<div class="card"><h2>'+t("steps.1_title")+'</h2><div class="grid">'+
+      numInput(t("fields.width"),"widthB","enclosure")+numInput(t("fields.height"),"heightH","enclosure")+numInput(t("fields.depth"),"depthT","enclosure")+
+      '<div><label>'+t("fields.material")+'</label><select data-bind="material" data-step="_material">'+
+      '<option value="stahl_lackiert"'+(p.material==="stahl_lackiert"?" selected":"")+'>Stahlblech lackiert (k=5,5)</option>'+
+      '<option value="edelstahl"'+(p.material==="edelstahl"?" selected":"")+'>Edelstahl (k=3,7)</option>'+
+      '<option value="aluminium"'+(p.material==="aluminium"?" selected":"")+'>Aluminium (k=12,0)</option>'+
+      '<option value="polyester"'+(p.material==="polyester"?" selected":"")+'>Polyester (k=3,5)</option>'+
+      '<option value="doppelwand"'+(p.material==="doppelwand"?" selected":"")+'>Doppelwand (k=4,5)</option></select></div></div>'+
+      '<fieldset><legend>Aufstellung</legend><div class="grid">'+
+      '<div><label>'+t("fields.mounting_rear")+'</label><select data-bind="rear" data-step="mounting"><option value="free"'+(p.mounting.rear==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="wall"'+(p.mounting.rear==="wall"?" selected":"")+'>'+t("mounting.wall")+'</option></select></div>'+
+      '<div><label>'+t("fields.mounting_sides")+'</label><select data-bind="sides" data-step="mounting"><option value="free"'+(p.mounting.sides==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="wall"'+(p.mounting.sides==="wall"?" selected":"")+'>'+t("mounting.wall")+'</option></select></div>'+
+      '<div><label>'+t("fields.mounting_top")+'</label><select data-bind="top" data-step="mounting"><option value="free"'+(p.mounting.top==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="covered"'+(p.mounting.top==="covered"?" selected":"")+'>'+t("mounting.covered")+'</option></select></div></div>'+
+      '<div class="hint">Wirksame Oberfläche nach b-Faktoren (IEC TR 60890-Muster) — Nachweis je Fläche im Protokoll.</div></fieldset>'+
+      '<div class="btnrow"><span></span><button class="btn" onclick="goto(2)">'+t("common.next")+' →</button></div></div>';
+    bindInputs(root);
+  }
+  else if (state.step===2){
+    root.innerHTML='<div class="card"><h2>'+t("steps.2_title")+'</h2><div class="grid">'+
+      numInput(t("fields.tMax"),"tMax","environment")+numInput(t("fields.tExp"),"tExp","environment")+numInput(t("fields.tMin"),"tMin","environment")+
+      numInput(t("fields.rh"),"rhPercent","environment","1")+numInput(t("fields.tInMax"),"tInMax","target")+numInput(t("fields.tInMin"),"tInMin","target")+'</div>'+
+      '<fieldset><legend>EN 61439-1 / 7.1 Presets</legend><div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      '<button class="btn ghost small" onclick="applyPreset(\'indoor\')">Innenraum: min −5 °C, max +40 °C</button>'+
+      '<button class="btn ghost small" onclick="applyPreset(\'outdoor\')">Freiluft: min −25 °C, max +40 °C</button></div></fieldset>'+
+      '<div class="btnrow"><button class="btn ghost" onclick="goto(1)">← '+t("common.back")+'</button><button class="btn" onclick="goto(3)">'+t("common.next")+' →</button></div></div>';
+    bindInputs(root);
+  }
+  else if (state.step===3){
+    root.innerHTML='<div class="card"><h2>'+t("steps.3_title")+'</h2><div id="compList"></div>'+
+      '<button class="btn ghost small" id="btnAddComp" style="margin-top:10px">+ '+t("fields.add_component")+'</button>'+
+      '<div class="btnrow"><button class="btn ghost" onclick="goto(2)">← '+t("common.back")+'</button><button class="btn" id="btnCalc">'+t("common.calculate")+'</button></div></div>';
+    renderComponentList(root.querySelector("#compList"));
+    root.querySelector("#btnAddComp").onclick=function(){ addEmptyComponent(); };
+    root.querySelector("#btnCalc").onclick=runCalc;
+  }
+  else if (state.step===4){ renderResult(); }
+}
+function applyPreset(kind){
+  var d=FlipsiThermKernel.EN61439[kind];
+  state.project.environment.tMax=d.tMax;
+  state.project.environment.tMin=d.tMin;
+  renderStep();
+}
+
+/* ---------- Komponenten ---------- */
+var COMP_TYPES={
+  direct:{label:"Direkteingabe (Datenblatt)",fields:[["watts","Verlustleistung (W)"]]},
+  power_supply:{label:"Netzteil",fields:[["P_out_W","Ausgangsleistung (W)"],["efficiency","η (leer=0,93)"]]},
+  drive:{label:"Frequenzumrichter",fields:[["P_N_W","Nennleistung (W)"],["efficiency","η (leer=0,97)"]]},
+  transformer:{label:"Trafo",fields:[["P_N_W","Nennleistung (W)"],["efficiency","η (leer=0,95)"]]},
+  motor:{label:"Motor",fields:[["P_mech_W","Mechanische Leistung (W)"],["efficiency","η (leer=0,85)"]]},
+  netfilter:{label:"Netzfilter",fields:[["deltaU_V","Spannungsfall ΔU (V, leer=0,5)"],["I_load_A","Betriebsstrom (A)"]]}
+};
+function addEmptyComponent(){
+  state.project.components.push({type:"direct",name:"",loadFactor:1,countsAtIdle:false});
+  renderComponentList(document.getElementById("compList"));
+}
+function renderComponentList(el){
+  el.innerHTML="";
+  state.project.components.forEach(function(c,i){
+    var row=document.createElement("div");
+    row.className="card"; row.style.marginBottom="8px"; row.style.padding="12px";
+    var fields=COMP_TYPES[c.type].fields.map(function(f){
+      return '<div><label>'+f[1]+'</label><input type="number" step="0.01" value="'+esc(c[f[0]]!=null?c[f[0]]:"")+'" data-ci="'+i+'" data-cf="'+f[0]+'"></div>';
+    }).join("");
+    row.innerHTML='<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">'+
+      '<div><label>Bezeichnung</label><input type="text" value="'+esc(c.name||"")+'" data-ci="'+i+'" data-cf="name" data-ctype="text"></div>'+
+      '<div><label>Typ</label><select data-ci="'+i+'" data-cf="type" data-ctype="select">'+
+      Object.keys(COMP_TYPES).map(function(k){ return '<option value="'+k+'"'+(k===c.type?" selected":"")+'>'+COMP_TYPES[k].label+'</option>'; }).join("")+
+      '</select></div>'+fields+
+      '<div><label>Auslastung a (0…1)</label><input type="number" step="0.05" min="0" max="1" value="'+esc(c.loadFactor!=null?c.loadFactor:1)+'" data-ci="'+i+'" data-cf="loadFactor"></div>'+
+      '<div style="display:flex;align-items:flex-end;gap:8px"><label style="display:flex;align-items:center;gap:4px;font-weight:400"><input type="checkbox" style="width:auto" data-ci="'+i+'" data-cf="countsAtIdle" data-ctype="check"'+(c.countsAtIdle?" checked":"")+'> im Stillstand aktiv</label>'+
+      '<button class="btn ghost small" data-del="'+i+'" style="margin-left:auto">✕</button></div></div>';
+    el.appendChild(row);
+  });
+  el.querySelectorAll("[data-ci]").forEach(function(inp){
+    inp.addEventListener("input", onCompChange); inp.addEventListener("change", onCompChange);
+  });
+  el.querySelectorAll("[data-del]").forEach(function(b){
+    b.addEventListener("click", function(){ state.project.components.splice(parseInt(b.getAttribute("data-del"),10),1); renderComponentList(el); });
+  });
+}
+function onCompChange(ev){
+  var i=parseInt(ev.target.getAttribute("data-ci"),10), f=ev.target.getAttribute("data-cf");
+  var c=state.project.components[i]; if(!c) return;
+  var ct=ev.target.getAttribute("data-ctype");
+  if (ct==="check") c[f]=ev.target.checked;
+  else if (ct==="select"){ c[f]=ev.target.value; renderComponentList(document.getElementById("compList")); return; }
+  else if (ct==="text") c[f]=ev.target.value;
+  else c[f]=ev.target.value===""?null:parseFloat(ev.target.value);
+}
+function runCalc(){
+  try{
+    state.lastResult = FlipsiThermKernel.calculate(state.project);
+    goto(4);
+  }catch(e){ alert("Eingabefehler: "+e.message); }
+}
+
+/* ---------- Ergebnis ---------- */
+var SOLUTION_KEYS={passive:"results.solution_passive",filterfan:"results.solution_filterfan",heatexchanger:"results.solution_heatexchanger",cooling_unit:"results.solution_cooling_unit"};
+function renderResult(){
+  var r=state.lastResult;
+  var root=document.getElementById("main");
+  if(!r){ root.innerHTML='<div class="card">'+t("common.calculate")+'</div>'; return; }
+  var kpi='<div class="kpi">'+
+    '<div class="box"><h3>'+t(SOLUTIONS_KEY(r.cooling.solution))+'</h3><div class="val">'+(r.cooling.solution==="cooling_unit"?"≥ "+r.cooling.qCool+" W":r.cooling.solution==="filterfan"?r.cooling.airflow_m3h+" m³/h":"0 W")+'</div><div class="sub">'+t(SOLUTIONS_KEY(r.cooling.solution)).replace(/[A-Za-zäöüß ]+—/,"")+' · '+t("results.q_cool")+': '+r.cooling.qCool+' W</div></div>'+
+    (r.cooling.airflow_m3h>0?'<div class="box"><h3>'+t("results.airflow")+'</h3><div class="val">'+r.cooling.airflow_m3h+' m³/h</div><div class="sub">V = 3,1·Q/ΔT</div></div>':"")+
+    '<div class="box"><h3>'+t("results.heater")+'</h3><div class="val">'+r.heating.required+' W</div><div class="sub">'+(r.heating.condensationGoverns?t("results.condensation_note"):"Frostschutz maßgebend")+'</div></div>'+
+    '<div class="box"><h3>'+t("results.dewpoint")+'</h3><div class="val">'+r.heating.dewPoint+' °C</div><div class="sub">Magnus · '+r.heating.tExp+' °C / '+r.environment.rhPercent+' %</div></div></div>';
+  var assumptions='<details><summary>'+t("results.assumptions")+' ('+r.assumptions.length+')</summary><div class="inner"><ul>'+
+    (r.assumptions.length?r.assumptions.map(function(a){return "<li>"+esc(a)+"</li>";}).join(""):"<li>"+t("results.none")+"</li>")+'</ul></div></details>';
+  root.innerHTML=kpi+
+    '<div class="card"><h2>Geräte-Empfehlung</h2><div id="devTable"></div>'+assumptions+
+    '<div class="btnrow"><button class="btn ghost" onclick="goto(3)">← '+t("common.back")+'</button>'+
+    '<button class="btn" id="btnPrint">'+t("report.print")+'</button></div></div>';
+  renderDeviceSuggestions(document.getElementById("devTable"));
+  document.getElementById("btnPrint").onclick=buildReport;
+}
+function SOLUTIONS_KEY(s){ return SOLUTION_KEY_MAP[s]; }
+var SOLUTION_KEY_MAP={passive:"results.solution_passive",filterfan:"results.solution_filterfan",heatexchanger:"results.solution_heatexchanger",cooling_unit:"results.solution_cooling_unit"};
+function renderDeviceSuggestions(el){
+  var r=state.lastResult; var rows=""; var need={};
+  if (r.cooling.solution==="filterfan") need.filterluefter=r.cooling.airflow_m3h;
+  if (r.cooling.solution==="cooling_unit") need.kuehlgeraet=r.cooling.qCool;
+  if (r.heating.required>0) need.heizung=r.heating.required;
+  for (var typ in need){
+    (function(typ){
+      var req=need[typ];
+      var fit=state.catDevices.filter(function(d){ return d.typ===typ &&
+        (typ==="heizung" ? (d.leistung_W||0)>=req*0.9 : typ==="kuehlgeraet" ? (d.kuehlleistung_W||0)>=req : (d.luftstrom_m3h||0)>=req); });
+      fit.sort(function(a,b){ return (a.leistung_W||a.kuehlleistung_W||a.luftstrom_m3h)-(b.leistung_W||b.kuehlleistung_W||b.luftstrom_m3h); });
+      rows+="<tr><td colspan='5' style='font-weight:600;color:var(--accent-dark);padding-top:12px'>"+typ+" ≥ "+Math.round(req)+"</td></tr>";
+      fit.slice(0,4).forEach(function(d){
+        rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.kuehlleistung_W?d.kuehlleistung_W+" W":d.luftstrom_m3h+" m³/h")+"</td><td><span class='badge'>"+["","Community","Firma","Projekt"][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ zu verifizieren</span>":"")+"</td><td>"+(d.quell_url?"<a href='"+d.quell_url+"' target='_blank' rel='noopener'>Quelle</a>":"")+"</td></tr>";
+      });
+    })(typ);
+  }
+  el.innerHTML="<table><tr><th>Hersteller</th><th>Gerät</th><th>Wert</th><th>Herkunft</th><th></th></tr>"+rows+"</table>"+
+    "<div class='hint'>Katalog-Stand "+EMBEDDED.config.catalogStand+" · ⚠ = Datensatz noch gegen Herstellerkatalog zu verifizieren</div>";
+}
+
+/* ---------- Protokoll ---------- */
+function reportData(r){
+  var p=state.project;
+  var rows=[
+    ["ΔT Kühlfall", r.cooling.dT+" K", "ΔT = T_zul,innen − T_um,max", "IEC TR 60890"],
+    ["Hüllabgabe Kühlfall", r.cooling.shellDissipation+" W", "Q = k·A·ΔT", "IEC TR 60890"],
+    ["Kühlbedarf", r.cooling.qCool+" W", "Q_K = P_v − k·A·ΔT", "IEC TR 60890"]
+  ];
+  if (r.cooling.airflow_m3h>0) rows.push(["Luftvolumenstrom", r.cooling.airflow_m3h+" m³/h","V = 3,1·Q/ΔT","offene Fachliteratur (ρ·cp, h)"]);
+  rows.push(["Taupunkt (erwartete Umgebung)", r.heating.dewPoint+" °C","Magnus-Formel","gültig 0…60 °C / φ 1–100 %"]);
+  rows.push(["Heizbedarf Frostschutz", r.heating.pFrost+" W","(k·A·ΔT − P_idle)·1,15","IEC TR 60890 + Praxis-Zuschlag 15 %"]);
+  rows.push(["Heizbedarf Betauung", r.heating.pDew+" W","(k·A·(τ − T_min) − P_idle)·1,15","Konvention nach FISEKON-Modell"]);
+  rows.push(["Auslegungs-Heizleistung", r.heating.required+" W","max(Frost, Betauung)","—"]);
+  return {
+    customer: p.customer.name||"—", ref: p.customer.ref||"",
+    date: new Date().toLocaleDateString("de-AT"),
+    sw: r.meta.tool+" v"+r.meta.version,
+    catStand: EMBEDDED.config.catalogStand,
+    inputs: [
+      ["Schrank B×H×T", p.enclosure.widthB+" × "+p.enclosure.heightH+" × "+p.enclosure.depthT+" m"],
+      ["Werkstoff (k-Wert)", p.material+" (k = "+r.kValue+" W/(m²·K))"],
+      ["Aufstellung", "Rückseite "+p.mounting.rear+" · Seiten "+p.mounting.sides+" · oben "+p.mounting.top],
+      ["Wirksame Oberfläche", r.surface.area+" m² (b-Faktoren, Summe je Fläche siehe unten)"],
+      ["Umgebung", "max "+r.environment.tMax+" °C · erwartet "+r.heating.tExp+" °C · min "+r.environment.tMin+" °C · φ "+r.environment.rhPercent+" %"],
+      ["Ziel-Innentemperatur", "max "+r.target.tInMax+" °C · Heizziel "+r.target.tInMin+" °C"],
+      ["Verlustleistung", r.losses.total+" W (davon im Stillstand: "+r.losses.idle+" W)"]
+    ],
+    surfaceRows: Object.keys(r.surface.breakdown).map(function(k){
+      var b=r.surface.breakdown[k];
+      return [k, "b="+b.factor, (b.raw?b.raw.toFixed(3):"0")+" m² → "+b.area.toFixed(3)+" m²"+(b.raw_note?" ("+b.raw_note+")":"")];
+    }),
+    calc: rows,
+    assumptions: r.assumptions,
+    losses: r.losses.details,
+    normRefs: r.meta.normRefs
+  };
+}
+function buildReport(){
+  var r=state.lastResult; if(!r) return;
+  var d=reportData(r);
+  var el=document.getElementById("report");
+  el.innerHTML='<div class="report-page report"><h1>'+t("report.header")+'</h1>'+
+    '<div class="meta">'+t("report.customer")+': <b>'+esc(d.customer)+'</b>'+(d.ref?" · "+esc(d.ref):"")+' · '+d.date+' · '+d.sw+' · Katalog-Stand '+d.catStand+'</div>'+
+    '<h2>'+t("report.inputs")+'</h2><table><tbody>'+
+    d.inputs.map(function(x){ return "<tr><td style='width:38%'>"+esc(x[0])+"</td><td><b>"+esc(x[1])+"</b></td></tr>"; }).join("")+'</tbody></table>'+
+    '<h2>Wirksame Oberfläche (je Fläche, b-Faktoren)</h2><table><thead><tr><th>Fläche</th><th>Faktor</th><th>Wirksam</th></tr></thead><tbody>'+
+    d.surfaceRows.map(function(x){ return "<tr><td>"+esc(x[0])+"</td><td>"+esc(x[1])+"</td><td>"+esc(x[2])+"</td></tr>"; }).join("")+'</tbody></table>'+
+    '<h2>Verlustleistung der Komponenten</h2><table><thead><tr><th>Komponente</th><th>Verlust</th><th>'+t("report.formula")+'</th></tr></thead><tbody>'+
+    (d.losses.length?d.losses.map(function(x){ return "<tr><td>"+esc(x.name)+"</td><td><b>"+x.losses+" W</b></td><td>"+esc(x.formula)+"</td></tr>"; }).join(""):"<tr><td colspan=3>—</td></tr>")+'</tbody></table>'+
+    '<h2>'+t("report.calculation")+'</h2><table><thead><tr><th>Größe</th><th>Ergebnis</th><th>'+t("report.formula")+'</th><th>'+t("report.norm")+'</th></tr></thead><tbody>'+
+    d.calc.map(function(x){ return "<tr><td>"+esc(x[0])+"</td><td><b>"+esc(x[1])+"</b></td><td>"+esc(x[2])+"</td><td class='norm'>"+esc(x[3])+"</td></tr>"; }).join("")+'</tbody></table>'+
+    (d.assumptions.length?("<h2>"+t("results.assumptions")+"</h2><ul style='font-size:.8rem'>"+d.assumptions.map(function(a){return "<li>"+esc(a)+"</li>";}).join("")+"</ul>"):"")+
+    '<div class="foot">'+t("report.footer_note")+' · Norm-Referenzen: '+d.normRefs.map(esc).join(" · ")+'</div></div>';
+  el.style.display="block";
+  window.print();
+}
+
+/* ---------- Projekt + Firmen-Katalog ---------- */
+function saveProject(){
+  var blob=new Blob([JSON.stringify({flipsitherm_project:"1",saved:new Date().toISOString(),project:state.project,customDevs:state.customDevs},null,2)],{type:"application/json"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="FlipsiTherm-Projekt.json"; a.click();
+}
+function loadProject(file){
+  file.text().then(function(txt){
+    var j=JSON.parse(txt);
+    if (j.flipsitherm_project!=="1") throw new Error("kein FlipsiTherm-Projekt");
+    state.project=j.project; state.customDevs=j.customDevs||[]; mergeCatalogs(); goto(1);
+  }).catch(function(e){ alert("Projektdatei unlesbar: "+e.message); });
+}
+function loadCustomCatalog(file){
+  file.text().then(function(txt){
+    var j=JSON.parse(txt);
+    if (!j.devices) throw new Error("Feld 'devices' fehlt");
+    j.devices.forEach(function(d){ d.layer=2; if(!d.hersteller) d.hersteller=j.hersteller||"Firmenkatalog"; });
+    state.firmCatalog=j; mergeCatalogs();
+    alert("Firmen-Katalog geladen: "+j.devices.length+" Geräte (nur lokal, bleibt firmenintern)");
+  }).catch(function(e){ alert("Katalogdatei unlesbar: "+e.message); });
+}
+
+/* ---------- Boot ---------- */
+function boot(){
+  // eingebettete Sprachen (nested JSON) → flache Keys
+  Object.keys(EMBEDDED.lang).forEach(function(l){
+    if (typeof EMBEDDED.lang[l]==="object" && EMBEDDED.lang[l].app) EMBEDDED.lang[l]=flatten(EMBEDDED.lang[l]);
+  });
+  var sel=document.getElementById("langSel");
+  sel.addEventListener("change",function(){ state.lang=sel.value; applyI18n(); });
+  document.getElementById("btnSave").onclick=saveProject;
+  document.getElementById("btnLoad").onclick=function(){ document.getElementById("fileProject").click(); };
+  document.getElementById("fileProject").addEventListener("change",function(e){ if(e.target.files[0]) loadProject(e.target.files[0]); });
+  document.getElementById("btnCustomCat").onclick=function(){ document.getElementById("fileCustomCat").click(); };
+  document.getElementById("fileCustomCat").addEventListener("change",function(e){ if(e.target.files[0]) loadCustomCatalog(e.target.files[0]); });
+  mergeCatalogs(); refreshLangMenu(); sel.value=state.lang;
+  renderSteps(); renderStep(); applyI18n();
+  autoRefresh();
+}
+document.addEventListener("DOMContentLoaded",boot);
+</script>
+</body>
+</html>

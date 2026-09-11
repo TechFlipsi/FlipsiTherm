@@ -1,0 +1,16 @@
+{
+  "_info": "FlipsiTherm Community-Katalog — STEGO. Ausbaustufen-Familien, keine garantierten Artikeldaten. status=zu_verifizieren: Werte gegen aktuellen STEGO-Katalog prüfen.",
+  "hersteller": "STEGO",
+  "stand": "2026-09-11",
+  "quelle_url": "https://www.stego-group.com/de/",
+  "devices": [
+    { "id": "stego-h-050", "typ": "heizung", "bezeichnung": "Heizgerät 50 W", "leistung_W": 50, "regelung": "Thermostat", "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "stego-h-100", "typ": "heizung", "bezeichnung": "Heizgerät 100 W", "leistung_W": 100, "regelung": "Thermostat", "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "stego-h-150", "typ": "heizung", "bezeichnung": "Heizgerät 150 W", "leistung_W": 150, "regelung": "Thermostat", "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "stego-h-250", "typ": "heizung", "bezeichnung": "Heizgerät 250 W", "leistung_W": 250, "regelung": "Thermostat", "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "stego-ff-075", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~75 m³/h", "luftstrom_m3h": 75, "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "stego-ff-160", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~160 m³/h", "luftstrom_m3h": 160, "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "stego-ff-330", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~330 m³/h", "luftstrom_m3h": 330, "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "stego-ff-600", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~600 m³/h", "luftstrom_m3h": 600, "quell_url": "https://www.stego-group.com/de/", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" }
+  ]
+}

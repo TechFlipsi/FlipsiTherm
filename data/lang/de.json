@@ -1,0 +1,67 @@
+{
+  "_info": "FlipsiTherm UI-Sprache Deutsch (Basislinie, im HTML eingebettet)",
+  "app": {
+    "title": "FlipsiTherm",
+    "subtitle": "Schaltschrank-Klimaauslegung",
+    "offline_badge": "Katalog-Stand: {stand} (offline)",
+    "online_badge": "Katalog-Stand: {stand} (aktualisiert)"
+  },
+  "steps": {
+    "1_title": "Schrank & Aufstellung",
+    "2_title": "Umgebung",
+    "3_title": "Komponenten",
+    "4_title": "Ergebnis & Protokoll"
+  },
+  "fields": {
+    "width": "Breite B (m)",
+    "height": "Höhe H (m)",
+    "depth": "Tiefe T (m)",
+    "material": "Werkstoff",
+    "mounting_rear": "Rückseite",
+    "mounting_sides": "Seiten",
+    "mounting_top": "Oberseite",
+    "tMax": "Maximale Umgebungstemperatur (°C)",
+    "tExp": "Erwartete Umgebungstemperatur (°C)",
+    "tMin": "Minimale Umgebungstemperatur (°C)",
+    "rh": "Relative Luftfeuchte (%)",
+    "tInMax": "Zulässige Innentemperatur max. (°C)",
+    "tInMin": "Ziel-Innentemperatur beim Heizen (°C)",
+    "add_component": "Komponente hinzufügen"
+  },
+  "mounting": {
+    "free": "frei",
+    "wall": "an Wand / Anreihung",
+    "covered": "abgedeckt (Bühne/Kabelboden)"
+  },
+  "results": {
+    "solution_passive": "Passivbetrieb ausreichend",
+    "solution_filterfan": "Filterlüfter erforderlich",
+    "solution_heatexchanger": "Luft-Luft-Wärmetauscher (bei Schmutz/Öl)",
+    "solution_cooling_unit": "Kühlgerät erforderlich",
+    "q_cool": "Erforderliche Kühlleistung",
+    "airflow": "Erforderlicher Luftvolumenstrom",
+    "heater": "Erforderliche Heizleistung",
+    "dewpoint": "Taupunkt",
+    "condensation_note": "Betauung bemessungsrelevant — Heizung mit Hygrostat!",
+    "assumptions": "Annahmen des Rechenkerns",
+    "none": "keine"
+  },
+  "report": {
+    "header": "Auslegungsprotokoll Schaltschrankklimatisierung",
+    "customer": "Kunde / Projekt",
+    "inputs": "Eingabewerte",
+    "calculation": "Berechnung",
+    "formula": "Formel",
+    "norm": "Norm-Bezug",
+    "footer_note": "Erstellt mit FlipsiTherm — offene Rechnung, alle Formeln im Repo dokumentiert.",
+    "print": "Protokoll drucken (PDF)"
+  },
+  "common": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "calculate": "Berechnen",
+    "save_project": "Projekt speichern",
+    "load_project": "Projekt laden",
+    "language": "Sprache"
+  }
+}

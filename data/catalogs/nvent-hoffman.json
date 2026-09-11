@@ -1,0 +1,14 @@
+{
+  "_info": "FlipsiTherm Community-Katalog — nVent HOFFMAN. Ausbaustufen-Familien, keine garantierten Artikeldaten. status=zu_verifizieren.",
+  "hersteller": "nVent HOFFMAN",
+  "stand": "2026-09-11",
+  "quelle_url": "https://www.nvent.com/de-de/hoffman",
+  "devices": [
+    { "id": "nv-h-100", "typ": "heizung", "bezeichnung": "Heizgerät 100 W", "leistung_W": 100, "regelung": "Thermostat", "quell_url": "https://www.nvent.com/de-de/hoffman", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "nv-h-200", "typ": "heizung", "bezeichnung": "Heizgerät 200 W", "leistung_W": 200, "regelung": "Thermostat", "quell_url": "https://www.nvent.com/de-de/hoffman", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "nv-ff-100", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~100 m³/h", "luftstrom_m3h": 100, "quell_url": "https://www.nvent.com/de-de/hoffman", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "nv-ff-300", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~300 m³/h", "luftstrom_m3h": 300, "quell_url": "https://www.nvent.com/de-de/hoffman", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "nv-ff-600", "typ": "filterluefter", "bezeichnung": "Filterlüfter ~600 m³/h", "luftstrom_m3h": 600, "quell_url": "https://www.nvent.com/de-de/hoffman", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" },
+    { "id": "nv-cu-2000", "typ": "kuehlgeraet", "bezeichnung": "Kühlgerät ~2,0 kW", "kuehlleistung_W": 2000, "quell_url": "https://www.nvent.com/de-de/hoffman", "zuletzt_geprueft": "2026-09-11", "status": "zu_verifizieren" }
+  ]
+}

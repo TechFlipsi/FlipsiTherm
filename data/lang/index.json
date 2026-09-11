@@ -1,0 +1,4 @@
+{
+  "languages": ["de", "en"],
+  "_info": "Weitere Sprachen hier eintragen (Dateiname = ISO-Kürzel, z. B. 'pl' → data/lang/pl.json). Die App lädt sie beim Start automatisch (Daten-only)."
+}
