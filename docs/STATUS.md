@@ -17,11 +17,11 @@ Stand: 11.09.2026 · J.A.R.V.I.S. · Repo: https://github.com/TechFlipsi/FlipsiT
   Annahmen) via Druckdialog → PDF
 - **i18n:** DE/EN eingebettet; data/lang/*.json per Repo-Autoload ODER lokalem Import
 - **Kataloge VERIFIZIERT (11.09.2026):** 84 Geräte / 4 Hersteller (Rittal 23, Pfannenberg 23,
-  nVent Hoffman 22, STEGO 16), **80/84 (95 %) status=verifiziert** mit quell_url +
-  zuletzt_geprueft; 4 offen markiert. Stichproben- Gegenprüfung durch J.A.R.V.I.S.:
+  nVent Hoffman 22, STEGO 16), **83/84 (99 %) status=verifiziert** mit quell_url +
+  zuletzt_geprueft; 1 offen markiert (nVent CUVN21002, L35/L35 nur im Diagramm). Stichproben- Gegenprüfung durch J.A.R.V.I.S.:
   Rittal SK 3178.800 (0,3 kW L35/L35, Rittal-PDF) ✓ · STEGO 01874.0-30 (433 m³/h
   freiblasend, STEGO-Seite) ✓. Kühlgeräte mit Nennbedingung (L35/L35), Wärmetauscher
-  teils in W/K (feld waermeleistung_wk, Umrechnung in UI). Schema-Validator
+  teils in W/K (feld waermeleistung_wk, einheitlich über alle Hersteller; Umrechnung in UI). Schema-Validator
   (test/catalog.test.js, 18 Tests) in CI
 - **Daten-only-Sicherheit:** nur JSON.parse-Nachladen + client-seitiger Schema-Check
   (validateCatalog) — korrupte Kataloge werden verworfen, kein eval/new Function
