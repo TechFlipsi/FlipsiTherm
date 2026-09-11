@@ -5,7 +5,10 @@
   "license": "MIT",
   "author": "TechFlipsi",
   "scripts": {
-    "test": "node test/kernel.test.js",
+    "test": "node test/kernel.test.js && node test/ui.test.js",
     "build": "node build.js"
+  },
+  "devDependencies": {
+    "jsdom": "*"
   }
 }
