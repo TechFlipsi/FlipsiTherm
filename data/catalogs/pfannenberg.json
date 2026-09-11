@@ -205,42 +205,39 @@
       "typ": "waermetauscher",
       "bezeichnung": "PAS 6043 Luft/Luft-Wärmetauscher",
       "artikel_nr": "12981111055",
-      "kuehlleistung_W": 400,
-      "kuehl_nennbedingung": "ΔT=20K abgeleitet (Herstellerangabe: 20 W/K spezifisch)",
       "regelung": "integrierter Thermostat (Werkseinstellung +35°C) + Alarmthermostat (+45°C)",
       "abmessungen_mm": "618 x 380 x 212",
       "quell_url": "https://www.pfannenberg.com/de/klimatisierung/ll-waermetauscher/luft-luft-waermetauscher/pas-6043/",
       "zuletzt_geprueft": "2026-09-11",
-      "status": "zu_verifizieren",
-      "notiz": "Verifiziert: spezifische Kälteleistung 20 W/K, Art. 12981111055 (230V), Luftvolumenstrom intern/extern 240/280 m³/h, IP54/IP34. kuehlleistung_W=400 ist ABGELEITET (20 W/K × ΔT20K, Q0 linear laut Produktblatt-Diagramm) — exakte Q0 dem Produktblatt PAS 6043/6133/6203 entnehmen"
+      "status": "verifiziert",
+      "notiz": "Verifiziert: spezifische Kälteleistung 20 W/K, Art. 12981111055 (230V), Luftvolumenstrom intern/extern 240/280 m³/h, IP54/IP34. kuehlleistung_W=400 ist ABGELEITET (20 W/K × ΔT20K, Q0 linear laut Produktblatt-Diagramm) — exakte Q0 dem Produktblatt PAS 6043/6133/6203 entnehmen | Normalisiert: spezifische Wärmeleistung 20.0 W/K (Produktblatt); Kühlkapazität = W/K × (Ti − Tu).",
+      "waermeleistung_wk": 20.0
     },
     {
       "id": "pf-wt-pas-6133",
       "typ": "waermetauscher",
       "bezeichnung": "PAS 6133 Luft/Luft-Wärmetauscher",
       "artikel_nr": "12982411055",
-      "kuehlleistung_W": 1300,
-      "kuehl_nennbedingung": "ΔT=20K abgeleitet (Herstellerangabe: 65 W/K spezifisch)",
       "regelung": "integrierter Thermostat (Werkseinstellung +35°C) + Alarmthermostat (+45°C)",
       "abmessungen_mm": "937 x 410 x 199",
       "quell_url": "https://www.pfannenberg.com/de/klimatisierung/ll-waermetauscher/luft-luft-waermetauscher/pas-6133/",
       "zuletzt_geprueft": "2026-09-11",
-      "status": "zu_verifizieren",
-      "notiz": "Verifiziert: spezifische Kälteleistung 65 W/K, Art. 12982411055 (230V), Luftvolumenstrom intern/extern 1175/1300 m³/h, IP54/IP34. kuehlleistung_W=1300 ist ABGELEITET (65 W/K × ΔT20K) — exakte Q0 dem Produktblatt entnehmen"
+      "status": "verifiziert",
+      "notiz": "Verifiziert: spezifische Kälteleistung 65 W/K, Art. 12982411055 (230V), Luftvolumenstrom intern/extern 1175/1300 m³/h, IP54/IP34. kuehlleistung_W=1300 ist ABGELEITET (65 W/K × ΔT20K) — exakte Q0 dem Produktblatt entnehmen | Normalisiert: spezifische Wärmeleistung 65.0 W/K (Produktblatt); Kühlkapazität = W/K × (Ti − Tu).",
+      "waermeleistung_wk": 65.0
     },
     {
       "id": "pf-wt-pas-6203",
       "typ": "waermetauscher",
       "bezeichnung": "PAS 6203 Luft/Luft-Wärmetauscher",
       "artikel_nr": "12983611055",
-      "kuehlleistung_W": 2000,
-      "kuehl_nennbedingung": "ΔT=20K abgeleitet (Herstellerangabe: 100 W/K spezifisch)",
       "regelung": "integrierter Thermostat (Werkseinstellung +35°C) + Alarmthermostat (+45°C)",
       "abmessungen_mm": "1555 x 485 x 252",
       "quell_url": "https://www.pfannenberg.com/de/klimatisierung/ll-waermetauscher/luft-luft-waermetauscher/pas-6203/",
       "zuletzt_geprueft": "2026-09-11",
-      "status": "zu_verifizieren",
-      "notiz": "Verifiziert: spezifische Kälteleistung 100 W/K, Art. 12983611055 (230V), IP54/IP34. kuehlleistung_W=2000 ist ABGELEITET (100 W/K × ΔT20K) — exakte Q0 dem Produktblatt entnehmen. Größte Ausbaustufe der PAS-Serie (Seitenanbau; PAI-Varianten teilversenkt)"
+      "status": "verifiziert",
+      "notiz": "Verifiziert: spezifische Kälteleistung 100 W/K, Art. 12983611055 (230V), IP54/IP34. kuehlleistung_W=2000 ist ABGELEITET (100 W/K × ΔT20K) — exakte Q0 dem Produktblatt entnehmen. Größte Ausbaustufe der PAS-Serie (Seitenanbau; PAI-Varianten teilversenkt) | Normalisiert: spezifische Wärmeleistung 100.0 W/K (Produktblatt); Kühlkapazität = W/K × (Ti − Tu).",
+      "waermeleistung_wk": 100.0
     },
     {
       "id": "pf-kg-6201",

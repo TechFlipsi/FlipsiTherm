@@ -165,65 +165,65 @@
       "typ": "waermetauscher",
       "bezeichnung": "Luft/Luft-Wärmetauscher TopTherm SK 3126.100, Wandanbau mit Regelung, 17,5 W/K",
       "artikel_nr": "3126100",
-      "kuehlleistung_W": 17.5,
       "regelung": "Elektronische Regelung mit digitaler Anzeige (werkseitig +35 °C)",
       "abmessungen_mm": "280 x 550 x 150 (BxHxT)",
       "quell_url": "https://www.rittal.com/pdf-creator/variant/de-de/3126100",
       "zuletzt_geprueft": "2026-09-11",
       "status": "verifiziert",
-      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 17,5 W/K (Kühlleistung = W/K x (Ti-Tu)). Luftleistung freiblasend je Kreislauf 265/315 m³/h (50/60 Hz), Bemessungsleistung 50/60 W, 230 V AC, Innenkreislauf IP54/Außenkreislauf IP34."
+      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 17,5 W/K (Kühlleistung = W/K x (Ti-Tu)). Luftleistung freiblasend je Kreislauf 265/315 m³/h (50/60 Hz), Bemessungsleistung 50/60 W, 230 V AC, Innenkreislauf IP54/Außenkreislauf IP34.",
+      "waermeleistung_wk": 17.5
     },
     {
       "id": "rittal-wt-3127-100",
       "typ": "waermetauscher",
       "bezeichnung": "Luft/Luft-Wärmetauscher TopTherm SK 3127.100, Wandanbau mit Regelung, 30 W/K",
       "artikel_nr": "3127100",
-      "kuehlleistung_W": 30,
       "regelung": "Elektronische Regelung mit digitaler Anzeige (werkseitig +35 °C)",
       "abmessungen_mm": "400 x 950 x 205 (BxHxT)",
       "quell_url": "https://www.rittal.com/pdf-creator/variant/de-de/3127100",
       "zuletzt_geprueft": "2026-09-11",
       "status": "verifiziert",
-      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 30 W/K. Luftleistung je Kreislauf 480/525 m³/h (50/60 Hz), Bemessungsleistung 120/150 W, 230 V AC."
+      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 30 W/K. Luftleistung je Kreislauf 480/525 m³/h (50/60 Hz), Bemessungsleistung 120/150 W, 230 V AC.",
+      "waermeleistung_wk": 30
     },
     {
       "id": "rittal-wt-3128-100",
       "typ": "waermetauscher",
       "bezeichnung": "Luft/Luft-Wärmetauscher TopTherm SK 3128.100, Wandanbau mit Regelung, 45 W/K",
       "artikel_nr": "3128100",
-      "kuehlleistung_W": 45,
       "regelung": "Elektronische Regelung mit digitaler Anzeige (werkseitig +35 °C)",
       "abmessungen_mm": "400 x 950 x 205 (BxHxT)",
       "quell_url": "https://www.rittal.com/pdf-creator/variant/de-de/3128100",
       "zuletzt_geprueft": "2026-09-11",
       "status": "verifiziert",
-      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 45 W/K. Luftleistung je Kreislauf 600/625 m³/h (50/60 Hz), Bemessungsleistung 140/180 W, 230 V AC."
+      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 45 W/K. Luftleistung je Kreislauf 600/625 m³/h (50/60 Hz), Bemessungsleistung 140/180 W, 230 V AC.",
+      "waermeleistung_wk": 45
     },
     {
       "id": "rittal-wt-3129-100",
       "typ": "waermetauscher",
       "bezeichnung": "Luft/Luft-Wärmetauscher TopTherm SK 3129.100, Wandanbau mit Regelung, 60 W/K",
       "artikel_nr": "3129100",
-      "kuehlleistung_W": 60,
       "regelung": "Elektronische Regelung mit digitaler Anzeige (werkseitig +35 °C)",
       "abmessungen_mm": "400 x 950 x 225 (BxHxT)",
       "quell_url": "https://www.rittal.com/pdf-creator/variant/de-de/3129100",
       "zuletzt_geprueft": "2026-09-11",
       "status": "verifiziert",
-      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 60 W/K. Luftleistung je Kreislauf 860/900 m³/h (50/60 Hz), Bemessungsleistung 170/180 W, 230 V AC."
+      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 60 W/K. Luftleistung je Kreislauf 860/900 m³/h (50/60 Hz), Bemessungsleistung 170/180 W, 230 V AC.",
+      "waermeleistung_wk": 60
     },
     {
       "id": "rittal-wt-3130-100",
       "typ": "waermetauscher",
       "bezeichnung": "Luft/Luft-Wärmetauscher TopTherm SK 3130.100, Wandanbau mit Regelung, 90 W/K",
       "artikel_nr": "3130100",
-      "kuehlleistung_W": 90,
       "regelung": "Elektronische Regelung mit digitaler Anzeige (werkseitig +35 °C)",
       "abmessungen_mm": "400 x 1580 x 215 (BxHxT)",
       "quell_url": "https://www.rittal.com/pdf-creator/variant/de-de/3130100",
       "zuletzt_geprueft": "2026-09-11",
       "status": "verifiziert",
-      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 90 W/K. Luftleistung je Kreislauf 850/945 m³/h (50/60 Hz), Bemessungsleistung 300/400 W, 230 V AC."
+      "notiz": "kuehlleistung_W = spezifische Wärmeleistung 90 W/K. Luftleistung je Kreislauf 850/945 m³/h (50/60 Hz), Bemessungsleistung 300/400 W, 230 V AC.",
+      "waermeleistung_wk": 90
     },
     {
       "id": "rittal-ku-3178-800",
