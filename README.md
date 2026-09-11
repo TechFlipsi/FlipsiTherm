@@ -25,7 +25,7 @@ Cloud-gebunden, login-pflichtig und empfehlen nur Eigenprodukte. FlipsiTherm ist
 
 ## Benutzung
 
-1. `index.html` herunterladen (oder aus [Releases](../../releases) nehmen)
+1. `FlipsiTherm.html` herunterladen (oder aus [Releases](../../releases) nehmen)
 2. Doppelklicken — öffnet sich im Browser, fertig.
 3. Projektdaten als JSON speichern/laden, Bericht über den Druckdialog als PDF
    („Microsoft Print to PDF" ist ab Windows 10 vorinstalliert).

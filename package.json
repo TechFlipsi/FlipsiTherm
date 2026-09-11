@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "TechFlipsi",
   "scripts": {
-    "test": "node test/kernel.test.js && node test/catalog.test.js && node test/ui.test.js",
+    "test": "node test/kernel.test.js && node test/catalog.test.js && node test/ui.test.js && node test/v02.test.js",
     "build": "node build.js"
   },
   "devDependencies": {

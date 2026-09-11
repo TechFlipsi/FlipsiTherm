@@ -38,6 +38,6 @@ const out = tpl
   .replace("/*__KERNEL__*/", () => kernel)
   .replace("/*__EMBEDDED_DATA__*/", () => embedded);
 
-fs.writeFileSync("index.html", out);
-console.log("index.html gebaut:", (out.length / 1024).toFixed(1), "KB ·",
+fs.writeFileSync("FlipsiTherm.html", out);
+console.log("FlipsiTherm.html gebaut:", (out.length / 1024).toFixed(1), "KB ·",
   "Sprachen:", langFilesList.join(", "), "· Kataloge:", catFiles.join(", "), "· Stand:", config.catalogStand);

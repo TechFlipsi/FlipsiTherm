@@ -88,6 +88,7 @@ test("Golden File: FISEKON-Beispiel — freistehender 0,8/2,0/0,6-Stahlschrank, 
 test("Kühlfall: Tu_max ≥ Ti_zul → Kühlgerät, kein Lüfter", () => {
   const res = calculate({
     enclosure: { widthB: 1, heightH: 2, depthT: 0.6 },
+    material: "stahl_lackiert",
     mounting: { rear: "free", sides: "free", top: "free" },
     environment: { tMax: 40, tExp: 30, tMin: -10, rhPercent: 60 },
     target: { tInMax: 35, tInMin: 5 },
@@ -98,6 +99,7 @@ test("Kühlfall: Tu_max ≥ Ti_zul → Kühlgerät, kein Lüfter", () => {
 test("Passivfall: kleine Last, große Hülle → keine aktive Kühlung nötig", () => {
   const res = calculate({
     enclosure: { widthB: 1.2, heightH: 2, depthT: 0.6 },
+    material: "stahl_lackiert",
     mounting: { rear: "free", sides: "free", top: "free" },
     environment: { tMax: 25, tExp: 20, tMin: -10, rhPercent: 60 },
     target: { tInMax: 35, tInMin: 0 },
@@ -108,6 +110,7 @@ test("Passivfall: kleine Last, große Hülle → keine aktive Kühlung nötig", 
 test("Heizen: ohne Verluste im Stillstand wird gegen Taupunkt geheizt", () => {
   const res = calculate({
     enclosure: { widthB: 0.6, heightH: 1.0, depthT: 0.3 },
+    material: "stahl_lackiert",
     mounting: { rear: "free", sides: "free", top: "free" },
     environment: { tMax: 30, tExp: 25, tMin: -10, rhPercent: 60 },
     target: { tInMax: 35, tInMin: 0 },
@@ -119,6 +122,7 @@ test("Heizen: ohne Verluste im Stillstand wird gegen Taupunkt geheizt", () => {
 test("Keine stillen Annahmen: fehlende η-Werte erscheinen als Assumptions", () => {
   const res = calculate({
     enclosure: { widthF: 0, widthB: 1, heightH: 2, depthT: 0.6 },
+    material: "stahl_lackiert",
     mounting: {},
     environment: { tMax: 30, tMin: -5, rhPercent: 60 },
     target: { tInMax: 35, tInMin: 5 },

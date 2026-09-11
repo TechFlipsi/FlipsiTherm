@@ -1,10 +1,7 @@
 {
   "_info": "FlipsiTherm UI-Sprache Deutsch (Basislinie, im HTML eingebettet)",
   "app": {
-    "title": "FlipsiTherm",
-    "subtitle": "Schaltschrank-Klimaauslegung",
-    "offline_badge": "Katalog-Stand: {stand} (offline)",
-    "online_badge": "Katalog-Stand: {stand} (aktualisiert)"
+    "cat_stand": "Katalog-Stand"
   },
   "steps": {
     "1_title": "Schrank & Aufstellung",
@@ -13,25 +10,11 @@
     "4_title": "Ergebnis & Protokoll"
   },
   "fields": {
-    "width": "Breite B (m)",
-    "height": "Höhe H (m)",
-    "depth": "Tiefe T (m)",
-    "material": "Werkstoff",
-    "mounting_rear": "Rückseite",
-    "mounting_sides": "Seiten",
-    "mounting_top": "Oberseite",
-    "tMax": "Maximale Umgebungstemperatur (°C)",
-    "tExp": "Erwartete Umgebungstemperatur (°C)",
-    "tMin": "Minimale Umgebungstemperatur (°C)",
-    "rh": "Relative Luftfeuchte (%)",
-    "tInMax": "Zulässige Innentemperatur max. (°C)",
-    "tInMin": "Ziel-Innentemperatur beim Heizen (°C)",
-    "add_component": "Komponente hinzufügen"
+    "roomHeating": "Raumaufheizung durch Nachbarschaft (K)",
+    "roomHeating_hint": "Stehen im Aufstellraum weitere Wärme abgebende Anlagen (Schaltschränke, Antriebe)? Dann Umgebungstemperatur um diesen Betrag erhöhen — z. B. +5…8 K in Schaltraum-Maschinenräumen. 0 = kein Einfluss angenommen."
   },
   "mounting": {
-    "free": "frei",
-    "wall": "an Wand / Anreihung",
-    "covered": "abgedeckt (Bühne/Kabelboden)"
+    "row": "eine Seite Nachbarschrank / Anreihung"
   },
   "results": {
     "solution_passive": "Passivbetrieb ausreichend",
@@ -57,11 +40,18 @@
     "print": "Protokoll drucken (PDF)"
   },
   "common": {
-    "back": "Zurück",
-    "next": "Weiter",
-    "calculate": "Berechnen",
-    "save_project": "Projekt speichern",
-    "load_project": "Projekt laden",
-    "language": "Sprache"
+    "optional": "optional"
+  },
+  "customers": {
+    "manage": "Kunden",
+    "name": "Firmenname *",
+    "contact": "Ansprechpartner",
+    "address": "Adresse",
+    "note": "Notiz",
+    "add": "Hinzufügen",
+    "hint": "* Pflichtfeld — alles andere optional. Kunden bleiben lokal (Browser-Speicher bzw. Projektfile), niemals auf GitHub.",
+    "name_required": "Bitte einen Firmennamen angeben (Pflichtfeld).",
+    "none": "kein Kunde gewählt",
+    "projectname": "Projektname / Auftragsnummer"
   }
 }

@@ -14,12 +14,22 @@ catch (e) {
   process.exit(0);
 }
 
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = fs.readFileSync(path.join(__dirname, "..", "FlipsiTherm.html"), "utf8");
 const dom = new JSDOM(html, {
   runScripts: "dangerously",
   pretendToBeVisual: true,
-  url: "file:///root/FlipsiTherm/index.html",
+  url: "http://localhost/FlipsiTherm.html",
   beforeParse(window) {
+    // localStorage: jsdom hat getter-only — mit defineProperty ersetzen (http-Origin hätte echte Storage)
+    let store = {};
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        getItem: (k) => (k in store ? store[k] : null),
+        setItem: (k, v) => { store[k] = String(v); },
+        removeItem: (k) => { delete store[k]; }
+      },
+      configurable: true
+    });
     window.fetch = () => Promise.resolve({ ok: false, status: 0, json: () => Promise.reject(new Error("offline (Test)")) }); // Auto-Refresh schlägt fehl → Offline-Badge
     window.print = () => { window.__printed = true; };
     window.scrollTo = () => {};

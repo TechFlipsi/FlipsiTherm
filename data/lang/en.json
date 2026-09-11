@@ -1,10 +1,7 @@
 {
   "_info": "FlipsiTherm UI language English (embedded baseline)",
   "app": {
-    "title": "FlipsiTherm",
-    "subtitle": "Enclosure climate design",
-    "offline_badge": "Catalog state: {stand} (offline)",
-    "online_badge": "Catalog state: {stand} (refreshed)"
+    "cat_stand": "Catalog state"
   },
   "steps": {
     "1_title": "Enclosure & mounting",
@@ -13,25 +10,11 @@
     "4_title": "Result & report"
   },
   "fields": {
-    "width": "Width B (m)",
-    "height": "Height H (m)",
-    "depth": "Depth T (m)",
-    "material": "Material",
-    "mounting_rear": "Rear side",
-    "mounting_sides": "Sides",
-    "mounting_top": "Top",
-    "tMax": "Max. ambient temperature (°C)",
-    "tExp": "Expected ambient temperature (°C)",
-    "tMin": "Min. ambient temperature (°C)",
-    "rh": "Relative humidity (%)",
-    "tInMax": "Max. permitted internal temperature (°C)",
-    "tInMin": "Target internal temperature when heating (°C)",
-    "add_component": "Add component"
+    "roomHeating": "Room heating by adjacent equipment (K)",
+    "roomHeating_hint": "If other heat-releasing equipment (enclosures) sits in the same room, raise all ambient temperatures by this amount — e.g. +5 K in machine rooms. 0 = assumed no influence."
   },
   "mounting": {
-    "free": "free",
-    "wall": "against wall / bayed",
-    "covered": "covered (shelf/cable duct)"
+    "row": "one side neighbour / bayed"
   },
   "results": {
     "solution_passive": "Passive operation sufficient",
@@ -57,11 +40,18 @@
     "print": "Print report (PDF)"
   },
   "common": {
-    "back": "Back",
-    "next": "Next",
-    "calculate": "Calculate",
-    "save_project": "Save project",
-    "load_project": "Load project",
-    "language": "Language"
+    "optional": "optional"
+  },
+  "customers": {
+    "manage": "Customers",
+    "name": "Company name *",
+    "contact": "Contact person",
+    "address": "Address",
+    "note": "Note",
+    "add": "Add",
+    "hint": "* required field — everything else optional. Customers stay local (browser storage/project file), never on GitHub.",
+    "name_required": "Please enter a company name (required).",
+    "none": "no customer selected",
+    "projectname": "Project name / order number"
   }
 }

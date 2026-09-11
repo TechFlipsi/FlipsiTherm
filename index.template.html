@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FlipsiTherm — Schaltschrank-Klimaauslegung</title>
 <style>
+
+[data-theme="dark"]{
+  --accent:#4a9eda;--accent-dark:#7db8e8;--bg:#141a21;--card:#1d252e;--ink:#e4eaf0;
+  --ink-soft:#93a3b3;--line:#2c3945;--ok:#5cb85c;--warn:#e0a458;--bad:#e05a52;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+}
+[data-theme="dark"] input,[data-theme="dark"] select{background:#0f151b;border-color:var(--line)}
+[data-theme="dark"] .kpi .box{border-left-color:var(--accent)}
+[data-theme="dark"] .verdict{background:#1a2c40;border-color:var(--accent);color:var(--accent-dark)}
+[data-theme="dark"] .report-page{background:#0f151b;border-color:var(--line)}
+[data-theme="dark"] .report .norm{color:var(--ink-soft)}
+[data-theme="dark"] details .inner{background:#0f151b}
+
 :root{
   --accent:#0f4c81;--accent-dark:#0a3358;--bg:#f4f6f9;--card:#ffffff;--ink:#1c2733;
   --ink-soft:#5a6a7a;--line:#dde4ec;--ok:#1e7d32;--warn:#b25e09;--bad:#b3261e;
@@ -59,6 +72,11 @@ th{color:var(--ink-soft);font-weight:600}
 .report .norm{color:var(--ink-soft);font-style:italic}
 .report h2{font-size:.95rem;margin:16px 0 8px;color:var(--accent-dark)}
 .report .foot{font-size:.72rem;color:var(--ink-soft);margin-top:24px;border-top:1px solid var(--line);padding-top:8px}
+
+@media print{
+  html[data-theme="dark"]{--accent:#0f4c81;--accent-dark:#0a3358;--bg:#ffffff;--card:#ffffff;--ink:#1c2733;--ink-soft:#5a6a7a;--line:#dde4ec;--shadow:none}
+}
+
 @media print{
   body{background:#fff}
   .wrap>*:not(#report){display:none!important}
@@ -76,12 +94,28 @@ th{color:var(--ink-soft);font-weight:600}
   </header>
   <div class="menu">
     <select id="langSel" style="width:auto"></select>
+    <button class="btn ghost small" id="btnTheme" title="Hell/Dunkel">◐</button>
+    <button class="btn ghost small" id="btnCustomers" data-i18n="customers.manage">Kunden</button>
     <button class="btn ghost small" id="btnSave" data-i18n="common.save_project">Projekt speichern</button>
     <button class="btn ghost small" id="btnLoad" data-i18n="common.load_project">Projekt laden</button>
     <button class="btn ghost small" id="btnCustomCat">Firmen-Katalog laden</button>
     <input type="file" id="fileProject" accept=".json" style="display:none">
     <input type="file" id="fileCustomCat" accept=".json" style="display:none">
   </div>
+  <dialog id="dlgCustomers" style="border:none;border-radius:12px;max-width:640px;width:92%;padding:0">
+    <div class="card" style="margin:0;border-radius:12px 12px 0 0;box-shadow:none">
+      <h2 data-i18n="customers.manage">Kunden</h2>
+      <div class="grid">
+        <div><label data-i18n="customers.name">Firmenname *</label><input id="custName" type="text"></div>
+        <div><label data-i18n="customers.contact">Ansprechpartner</label><input id="custContact" type="text"></div>
+        <div><label data-i18n="customers.address">Adresse</label><input id="custAddress" type="text"></div>
+        <div><label data-i18n="customers.note">Notiz</label><input id="custNote" type="text"></div>
+      </div>
+      <div class="hint" data-i18n="customers.hint">* Pflichtfeld — alles andere optional. Kunden bleiben lokal (im Projektfile bzw. Browser-Speicher), niemals auf GitHub.</div>
+      <div class="btnrow"><button class="btn ghost" id="btnCustCancel" data-i18n="common.back">Zurück</button><button class="btn" id="btnCustAdd" data-i18n="customers.add">Hinzufügen</button></div>
+      <div id="custList" style="margin-top:12px"></div>
+    </div>
+  </dialog>
   <div class="steps" id="stepsBar"></div>
   <div id="main"></div>
   <div id="report"></div>
@@ -110,6 +144,7 @@ var state = {
   firmCatalog: null,
   customDevs: [],
   catDevices: [],
+  customers: [],  // lokale Kundendatenbank (nicht öffentlich)
   lastResult: null
 };
 
@@ -228,6 +263,8 @@ function renderStep(){
   var p=state.project;
   if (state.step===1){
     root.innerHTML='<div class="card"><h2>'+t("steps.1_title")+'</h2><div class="grid">'+
+      '<div><label>'+t("report.customer")+' ('+t("common.optional")+')</label><select id="custSelect" style="width:100%"></select></div>'+
+      '<div><label>'+t("customers.projectname")+'</label><input type="text" id="projTitle" value="'+esc(p.customer.ref||"")+'" data-proj="ref"></div></div><div class="grid" style="margin-top:12px">'+
       numInput(t("fields.width"),"widthB","enclosure")+numInput(t("fields.height"),"heightH","enclosure")+numInput(t("fields.depth"),"depthT","enclosure")+
       '<div><label>'+t("fields.material")+'</label><select data-bind="material" data-step="_material">'+
       '<option value="stahl_lackiert"'+(p.material==="stahl_lackiert"?" selected":"")+'>Stahlblech lackiert (k=5,5)</option>'+
@@ -237,16 +274,21 @@ function renderStep(){
       '<option value="doppelwand"'+(p.material==="doppelwand"?" selected":"")+'>Doppelwand (k=4,5)</option></select></div></div>'+
       '<fieldset><legend>Aufstellung</legend><div class="grid">'+
       '<div><label>'+t("fields.mounting_rear")+'</label><select data-bind="rear" data-step="mounting"><option value="free"'+(p.mounting.rear==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="wall"'+(p.mounting.rear==="wall"?" selected":"")+'>'+t("mounting.wall")+'</option></select></div>'+
-      '<div><label>'+t("fields.mounting_sides")+'</label><select data-bind="sides" data-step="mounting"><option value="free"'+(p.mounting.sides==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="wall"'+(p.mounting.sides==="wall"?" selected":"")+'>'+t("mounting.wall")+'</option></select></div>'+
+      '<div><label>'+t("fields.mounting_sides")+'</label><select data-bind="sides" data-step="mounting"><option value="free"'+(p.mounting.sides==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="row"'+(p.mounting.sides==="row"?" selected":"")+'>'+t("mounting.row")+'</option><option value="wall"'+(p.mounting.sides==="wall"?" selected":"")+'>'+t("mounting.wall")+'</option></select></div>'+
       '<div><label>'+t("fields.mounting_top")+'</label><select data-bind="top" data-step="mounting"><option value="free"'+(p.mounting.top==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="covered"'+(p.mounting.top==="covered"?" selected":"")+'>'+t("mounting.covered")+'</option></select></div></div>'+
       '<div class="hint">Wirksame Oberfläche nach b-Faktoren (IEC TR 60890-Muster) — Nachweis je Fläche im Protokoll.</div></fieldset>'+
       '<div class="btnrow"><span></span><button class="btn" onclick="goto(2)">'+t("common.next")+' →</button></div></div>';
     bindInputs(root);
+    renderCustomerSelect();
+    var cs=root.querySelector("#custSelect");
+    if(cs){ cs.addEventListener("change",function(){ state.project.customer.name=cs.value; }); }
+    var pt=root.querySelector("#projTitle");
+    if(pt){ pt.addEventListener("input",function(){ state.project.customer.ref=pt.value; }); }
   }
   else if (state.step===2){
     root.innerHTML='<div class="card"><h2>'+t("steps.2_title")+'</h2><div class="grid">'+
       numInput(t("fields.tMax"),"tMax","environment")+numInput(t("fields.tExp"),"tExp","environment")+numInput(t("fields.tMin"),"tMin","environment")+
-      numInput(t("fields.rh"),"rhPercent","environment","1")+numInput(t("fields.tInMax"),"tInMax","target")+numInput(t("fields.tInMin"),"tInMin","target")+'</div>'+
+      numInput(t("fields.rh"),"rhPercent","environment","1")+numInput(t("fields.tInMax"),"tInMax","target")+numInput(t("fields.tInMin"),"tInMin","target")+numInput(t("fields.roomHeating"),"roomHeatingK","environment","0.5")+'</div><div class="hint">'+t("fields.roomHeating_hint")+'</div>'+
       '<fieldset><legend>EN 61439-1 / 7.1 Presets</legend><div style="display:flex;gap:8px;flex-wrap:wrap">'+
       '<button class="btn ghost small" onclick="applyPreset(\'indoor\')">Innenraum: min −5 °C, max +40 °C</button>'+
       '<button class="btn ghost small" onclick="applyPreset(\'outdoor\')">Freiluft: min −25 °C, max +40 °C</button></div></fieldset>'+
@@ -256,7 +298,8 @@ function renderStep(){
   else if (state.step===3){
     root.innerHTML='<div class="card"><h2>'+t("steps.3_title")+'</h2><div id="compList"></div>'+
       '<button class="btn ghost small" id="btnAddComp" style="margin-top:10px">+ '+t("fields.add_component")+'</button>'+
-      '<div class="btnrow"><button class="btn ghost" onclick="goto(2)">← '+t("common.back")+'</button><button class="btn" id="btnCalc">'+t("common.calculate")+'</button></div></div>';
+      '<div class="btnrow"><button class="btn ghost" onclick="goto(2)">← '+t("common.back")+'</button><button class="btn" id="btnCalc">'+t("common.calculate")+'</button></div>'+
+      '<div id="gateErrors" style="margin-top:10px;font-size:.85rem;color:var(--bad)"></div></div>';
     renderComponentList(root.querySelector("#compList"));
     root.querySelector("#btnAddComp").onclick=function(){ addEmptyComponent(); };
     root.querySelector("#btnCalc").onclick=runCalc;
@@ -318,6 +361,13 @@ function onCompChange(ev){
   else c[f]=ev.target.value===""?null:parseFloat(ev.target.value);
 }
 function runCalc(){
+  var v = FlipsiThermKernel.validateInput(state.project);
+  var box = document.getElementById("gateErrors");
+  var msg = "";
+  if (v.errors.length) msg = v.errors.map(function(e){ return "⛔ "+esc(e); }).join("<br>");
+  if (v.warnings.length) msg += (msg?"<br>":"") + v.warnings.map(function(w){ return "⚠ "+esc(w); }).join("<br>");
+  if (box) box.innerHTML = msg;
+  if (v.errors.length) return; // Pflichtwerte fehlen → kein Schritt 4
   try{
     state.lastResult = FlipsiThermKernel.calculate(state.project);
     goto(4);
@@ -385,8 +435,12 @@ function reportData(r){
   rows.push(["Heizbedarf Frostschutz", r.heating.pFrost+" W","(k·A·ΔT − P_idle)·1,15","IEC TR 60890 + Praxis-Zuschlag 15 %"]);
   rows.push(["Heizbedarf Betauung", r.heating.pDew+" W","(k·A·(τ − T_min) − P_idle)·1,15","Konvention nach FISEKON-Modell"]);
   rows.push(["Auslegungs-Heizleistung", r.heating.required+" W","max(Frost, Betauung)","—"]);
+  var cust = state.customers.find(function(c){ return c.name===p.customer.name; }) || null;
   return {
-    customer: p.customer.name||"—", ref: p.customer.ref||"",
+    customer: p.customer.name||"—",
+    ref: p.customer.ref||"",
+    custContact: (cust&&cust.contact)||"",
+    custAddress: (cust&&cust.address)||"",
     date: new Date().toLocaleDateString("de-AT"),
     sw: r.meta.tool+" v"+r.meta.version,
     catStand: EMBEDDED.config.catalogStand,
@@ -414,7 +468,8 @@ function buildReport(){
   var d=reportData(r);
   var el=document.getElementById("report");
   el.innerHTML='<div class="report-page report"><h1>'+t("report.header")+'</h1>'+
-    '<div class="meta">'+t("report.customer")+': <b>'+esc(d.customer)+'</b>'+(d.ref?" · "+esc(d.ref):"")+' · '+d.date+' · '+d.sw+' · Katalog-Stand '+d.catStand+'</div>'+
+    '<div class="meta"><b>'+esc(d.customer)+'</b>'+(d.custAddress?" · "+esc(d.custAddress):"")+(d.custContact?" · "+esc(d.custContact):"")+(d.ref?" · <b>"+esc(d.ref)+"</b>":"")+'</div>'+
+    '<div class="meta">'+d.date+' · '+d.sw+' · '+t("app.cat_stand")+' '+d.catStand+'</div>'+
     '<h2>'+t("report.inputs")+'</h2><table><tbody>'+
     d.inputs.map(function(x){ return "<tr><td style='width:38%'>"+esc(x[0])+"</td><td><b>"+esc(x[1])+"</b></td></tr>"; }).join("")+'</tbody></table>'+
     '<h2>Wirksame Oberfläche (je Fläche, b-Faktoren)</h2><table><thead><tr><th>Fläche</th><th>Faktor</th><th>Wirksam</th></tr></thead><tbody>'+
@@ -431,14 +486,14 @@ function buildReport(){
 
 /* ---------- Projekt + Firmen-Katalog ---------- */
 function saveProject(){
-  var blob=new Blob([JSON.stringify({flipsitherm_project:"1",saved:new Date().toISOString(),project:state.project,customDevs:state.customDevs},null,2)],{type:"application/json"});
+  var blob=new Blob([JSON.stringify({flipsitherm_project:"2",saved:new Date().toISOString(),project:state.project,customDevs:state.customDevs,customers:state.customers},null,2)],{type:"application/json"});
   var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="FlipsiTherm-Projekt.json"; a.click();
 }
 function loadProject(file){
   file.text().then(function(txt){
     var j=JSON.parse(txt);
     if (j.flipsitherm_project!=="1") throw new Error("kein FlipsiTherm-Projekt");
-    state.project=j.project; state.customDevs=j.customDevs||[]; mergeCatalogs(); goto(1);
+    state.project=j.project; state.customDevs=j.customDevs||[]; state.customers=j.customers||[]; mergeCatalogs(); renderCustomerSelect(); goto(1);
   }).catch(function(e){ alert("Projektdatei unlesbar: "+e.message); });
 }
 function loadCustomCatalog(file){
@@ -449,6 +504,41 @@ function loadCustomCatalog(file){
     state.firmCatalog=j; mergeCatalogs();
     alert("Firmen-Katalog geladen: "+j.devices.length+" Geräte (nur lokal, bleibt firmenintern)");
   }).catch(function(e){ alert("Katalogdatei unlesbar: "+e.message); });
+}
+
+/* ---------- Kundenverwaltung (lokal, niemals öffentlich) ---------- */
+function loadCustomers(){
+  try { return JSON.parse(localStorage.getItem("flipsitherm_customers")||"[]"); } catch(e){ return []; }
+}
+function saveCustomers(list){ try { localStorage.setItem("flipsitherm_customers", JSON.stringify(list)); } catch(e){} }
+function renderCustomerSelect(){
+  var sel=document.getElementById("custSelect"); if(!sel) return;
+  var cur=state.project.customer.name||"";
+  sel.innerHTML='<option value="">— '+t("customers.none")+' —</option>';
+  state.customers.forEach(function(c,i){
+    var o=document.createElement("option"); o.value=c.name; o.textContent=c.name+(c.address?" · "+c.address:""); sel.appendChild(o);
+  });
+  sel.value=cur;
+}
+function renderCustomerList(){
+  var el=document.getElementById("custList"); el.innerHTML="";
+  state.customers.forEach(function(c,i){
+    var row=document.createElement("div");
+    row.className="hint"; row.style.display="flex"; row.style.gap="8px"; row.style.alignItems="center";
+    row.innerHTML="<span style='color:var(--ink)'><b>"+esc(c.name)+"</b>"+(c.address?" · "+esc(c.address):"")+(c.note?" · "+esc(c.note):"")+"</span>";
+    var del=document.createElement("button"); del.className="btn ghost small"; del.textContent="✕";
+    del.onclick=function(){ state.customers.splice(i,1); saveCustomers(state.customers); renderCustomerSelect(); renderCustomerList(); };
+    row.appendChild(del); el.appendChild(row);
+  });
+}
+function applyTheme(){
+  var th = localStorage.getItem("flipsitherm_theme") || "light";
+  document.documentElement.setAttribute("data-theme", th);
+  document.getElementById("btnTheme").textContent = th==="dark" ? "☀" : "◐";
+}
+function toggleTheme(){
+  var th = (localStorage.getItem("flipsitherm_theme")==="dark") ? "light" : "dark";
+  localStorage.setItem("flipsitherm_theme", th); applyTheme();
 }
 
 /* ---------- Boot ---------- */
@@ -464,6 +554,22 @@ function boot(){
   document.getElementById("fileProject").addEventListener("change",function(e){ if(e.target.files[0]) loadProject(e.target.files[0]); });
   document.getElementById("btnCustomCat").onclick=function(){ document.getElementById("fileCustomCat").click(); };
   document.getElementById("fileCustomCat").addEventListener("change",function(e){ if(e.target.files[0]) loadCustomCatalog(e.target.files[0]); });
+  // Theme
+  applyTheme();
+  document.getElementById("btnTheme").addEventListener("click", toggleTheme);
+  // Kunden laden (Browser-Speicher) + Dialog
+  try { state.customers = JSON.parse(localStorage.getItem("flipsitherm_customers")||"[]"); } catch(e){ state.customers=[]; }
+  var dlg=document.getElementById("dlgCustomers");
+  document.getElementById("btnCustomers").onclick=function(){ renderCustomerList(); dlg.showModal(); };
+  document.getElementById("btnCustCancel").onclick=function(){ dlg.close(); };
+  document.getElementById("btnCustAdd").onclick=function(){
+    var n=document.getElementById("custName").value.trim();
+    if(!n){ alert(t("customers.name_required")); return; }
+    state.customers.push({name:n, contact:document.getElementById("custContact").value.trim(), address:document.getElementById("custAddress").value.trim(), note:document.getElementById("custNote").value.trim()});
+    saveCustomers(state.customers);
+    document.getElementById("custName").value=""; document.getElementById("custContact").value=""; document.getElementById("custAddress").value=""; document.getElementById("custNote").value="";
+    renderCustomerSelect(); renderCustomerList();
+  };
   mergeCatalogs(); refreshLangMenu(); sel.value=state.lang;
   renderSteps(); renderStep(); applyI18n();
   autoRefresh();
