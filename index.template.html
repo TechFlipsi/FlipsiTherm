@@ -139,6 +139,22 @@ function mergeCatalogs(){
   state.customDevs.forEach(function(d){ state.catDevices.push(Object.assign({},d,{layer:3})); });
 }
 function fetchJSON(url){ return fetch(url).then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }); }
+/* Client-seitige Katalog-Sanity: nur wohlgeformte, plausible Datensätze werden akzeptiert.
+   (Daten-only bleibt gewahrt: JSON.parse + Feldprüfung, keine Ausführung.) */
+function validateCatalog(c){
+  if (!c || !Array.isArray(c.devices) || c.devices.length < 3) return false;
+  if (typeof c.hersteller!=="string" || c.hersteller.length<2) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(c.stand||"")) return false;
+  var TYPES={heizung:"leistung_W",filterluefter:"luftstrom_m3h",waermetauscher:"kuehlleistung_W",kuehlgeraet:"kuehlleistung_W"};
+  for (var i=0;i<c.devices.length;i++){
+    var d=c.devices[i], vf=TYPES[d.typ];
+    if (!vf) return false;
+    if (typeof d[vf]!=="number" || d[vf]<=0) return false;
+    if (typeof d.bezeichnung!=="string" || d.bezeichnung.length<2) return false;
+    if (d.status && d.status!=="verifiziert" && d.status!=="zu_verifizieren") return false;
+  }
+  return true;
+}
 function setBadge(stand, online){
   var b=document.getElementById("catalogBadge");
   b.textContent = t(online?"app.online_badge":"app.offline_badge", {stand:stand});
@@ -148,7 +164,8 @@ async function autoRefresh(){ // NUR Daten nachladen (JSON) — niemals Code
   if (!EMBEDDED.config.autoUpdate || !navigator.onLine){ setBadge(EMBEDDED.config.catalogStand, false); return; }
   try{
     var fetched = await Promise.all(EMBEDDED.config.catalogFiles.map(function(f){ return fetchJSON(DATA_BASE+"data/catalogs/"+f); }));
-    if (fetched && fetched.length){
+    fetched = (fetched||[]).filter(function(c,i){ var ok=validateCatalog(c); if(!ok) console.warn("Katalog verworfen (Schema-Fail):", EMBEDDED.config.catalogFiles[i]); return ok; });
+    if (fetched.length){
       EMBEDDED.catalogs = fetched;
       EMBEDDED.config.catalogStand = (fetched[0] && fetched[0].stand) || EMBEDDED.config.catalogStand;
     }
@@ -331,23 +348,28 @@ function SOLUTIONS_KEY(s){ return SOLUTION_KEY_MAP[s]; }
 var SOLUTION_KEY_MAP={passive:"results.solution_passive",filterfan:"results.solution_filterfan",heatexchanger:"results.solution_heatexchanger",cooling_unit:"results.solution_cooling_unit"};
 function renderDeviceSuggestions(el){
   var r=state.lastResult; var rows=""; var need={};
-  if (r.cooling.solution==="filterfan") need.filterluefter=r.cooling.airflow_m3h;
+  if (r.cooling.solution==="filterfan"){ need.filterluefter=r.cooling.airflow_m3h; need.waermetauscher=r.cooling.qCool; }
   if (r.cooling.solution==="cooling_unit") need.kuehlgeraet=r.cooling.qCool;
   if (r.heating.required>0) need.heizung=r.heating.required;
+  var TYP_LABELS={heizung:"Heizung",filterluefter:"Filterlüfter",waermetauscher:"L/L-Wärmetauscher",kuehlgeraet:"Kühlgerät"};
   for (var typ in need){
     (function(typ){
       var req=need[typ];
       var fit=state.catDevices.filter(function(d){ return d.typ===typ &&
-        (typ==="heizung" ? (d.leistung_W||0)>=req*0.9 : typ==="kuehlgeraet" ? (d.kuehlleistung_W||0)>=req : (d.luftstrom_m3h||0)>=req); });
-      fit.sort(function(a,b){ return (a.leistung_W||a.kuehlleistung_W||a.luftstrom_m3h)-(b.leistung_W||b.kuehlleistung_W||b.luftstrom_m3h); });
-      rows+="<tr><td colspan='5' style='font-weight:600;color:var(--accent-dark);padding-top:12px'>"+typ+" ≥ "+Math.round(req)+"</td></tr>";
+        (typ==="heizung" ? (d.leistung_W||0)>=req*0.9 :
+         typ==="filterluefter" ? (d.luftstrom_m3h||0)>=req :
+         typ==="waermetauscher" ? (d.waermeleistung_wk ? d.waermeleistung_wk*(r.cooling.dT||1)>=req : (d.kuehlleistung_W||0)>=req) :
+         (d.kuehlleistung_W||0)>=req); });
+      fit.sort(function(a,b){ return (a.leistung_W||a.kuehlleistung_W||((a.waermeleistung_wk||0)*(r.cooling.dT||1)))-(b.leistung_W||b.kuehlleistung_W||((b.waermeleistung_wk||0)*(r.cooling.dT||1))); });
+      rows+="<tr><td colspan='5' style='font-weight:600;color:var(--accent-dark);padding-top:12px'>"+TYP_LABELS[typ]+" ≥ "+Math.round(req)+"</td></tr>";
       fit.slice(0,4).forEach(function(d){
-        rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.kuehlleistung_W?d.kuehlleistung_W+" W":d.luftstrom_m3h+" m³/h")+"</td><td><span class='badge'>"+["","Community","Firma","Projekt"][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ zu verifizieren</span>":"")+"</td><td>"+(d.quell_url?"<a href='"+d.quell_url+"' target='_blank' rel='noopener'>Quelle</a>":"")+"</td></tr>";
+        rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+(d.kuehl_nennbedingung?" <span class='badge'>"+esc(d.kuehl_nennbedingung)+"</span>":"")+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.waermeleistung_wk?d.waermeleistung_wk+" W/K (≈"+Math.round(d.waermeleistung_wk*(r.cooling.dT||1))+" W bei ΔT "+r.cooling.dT+" K)":d.kuehlleistung_W+" W")+(d.artikel_nr?" · Art. "+esc(d.artikel_nr):"")+"</td><td><span class='badge'>"+["","Community","Firma","Projekt"][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ zu verifizieren</span>":"")+"</td><td>"+(d.quell_url?"<a href='"+d.quell_url+"' target='_blank' rel='noopener'>Quelle</a>":"")+"</td></tr>";
       });
+      if (typ==="waermetauscher" && fit.length===0) rows+="<tr><td colspan='5' class='hint'>Kein Wärmetauscher im Katalog — bei Schmutz/Öl-Einsatz selbst ergänzen (Firmen-Katalog).</td></tr>";
     })(typ);
   }
   el.innerHTML="<table><tr><th>Hersteller</th><th>Gerät</th><th>Wert</th><th>Herkunft</th><th></th></tr>"+rows+"</table>"+
-    "<div class='hint'>Katalog-Stand "+EMBEDDED.config.catalogStand+" · ⚠ = Datensatz noch gegen Herstellerkatalog zu verifizieren</div>";
+    "<div class='hint'>Katalog-Stand "+EMBEDDED.config.catalogStand+" · ⚠ = Datensatz noch gegen Herstellerkatalog zu verifizieren · Filterlüfter-Werte freiblasend; Gegendruck beachten (Protokoll-Hinweis)</div>";
 }
 
 /* ---------- Protokoll ---------- */
