@@ -2,6 +2,8 @@
 
 **Herstellerneutrale Schaltschrank-Klimaauslegung — offline, ohne Installation, ohne Login.**
 
+🌐 **Webseite & Download:** https://techflipsi.github.io/flipsitherm-site/
+
 FlipsiTherm berechnet, welche **Heiz- und Kühlleistung** ein Schaltschrank benötigt
 (Taupunkt/Betauung, Frostschutz, Innentemperatur-Ziel), leitet daraus den nötigen
 **Volumenstrom** für Filterlüfter ab und empfiehlt den **Lösungstyp** (Passiv /
