@@ -1,6 +1,6 @@
 # FlipsiTherm — Projektstatus
 
-Stand: 14.09.2026 (v0.2.3) · J.A.R.V.I.S. · Repo: https://github.com/TechFlipsi/FlipsiTherm (ÖFFENTLICH)
+Stand: 14.09.2026 (v0.2.4) · J.A.R.V.I.S. · Repo: https://github.com/TechFlipsi/FlipsiTherm (ÖFFENTLICH)
 
 ## Erledigt (M1+M2+M4 im Mini-Scope, M3 verifiziert)
 
@@ -27,6 +27,7 @@ Stand: 14.09.2026 (v0.2.3) · J.A.R.V.I.S. · Repo: https://github.com/TechFlips
   (validateCatalog) — korrupte Kataloge werden verworfen, kein eval/new Function
 - **CI:** GitHub Actions — npm install, build, 17 Kernel- + 18 Katalog- + 11 UI-Tests
 - **Releases:** v0.1.0, v0.1.1, v0.2.0, v0.2.1 (latest) — v0.2.1 erstmals mit Asset FlipsiTherm.html + SHA256SUMS
+- **14.09.2026 v0.2.4 — Nachbesserung (6 restliche Agenten-Befunde):** Kunden-Duplikat-Schutz, geladener Kunde im Select, gateMsg-Persistenz, generische kein-Gerät-Meldung, catalogStand=neuester Stand, README-Korrekturen. Asset SHA-256: 45a0b3a0...
 - **14.09.2026 v0.2.3 — Vollständiger Fehler-Audit (29 Befunde):** Katalog-Verlust im Online-Modus (validateCatalog akzeptierte WTA nur mit kuehlleistung_W → Rittal/Pfannenberg/nVent verworfen), Protokoll-Rohkeys (surf.sideLeft/sideRight camelCase + Material-Name), XSS via quell_url (safeUrl: nur http/s), Kernel-Warnungen in Schritt 4 + Protokoll, Projekt-Load: Kunden-MERGE statt Replace + lastResult-Invalidierung + Defaults gegen Crash, altitude_m fließt jetzt in Annahmen, Widerspruchs-Warnungen (tInMin>tInMax, tMin>tMax), Doppel-Meldung entfernt, required=0-Note korrekt, Magnus-Gültigkeitshinweis, Sortier-Fix (Filterlüfter), 90-%-Toleranz-Kennzeichnung, Protokoll hidden nach Druck, File-Input-Reset, toter Code entfernt. 75 Tests (68+4 branch+3 edge) grün. Verifiziert mit 12-Punkte-Verifikationsskript.
 - **14.09.2026 v0.2.2 — Vollständige Zweisprachigkeit:** Kernel-Meldungen (Fehler/Warnungen/Annahmen), Materialien, Komponententypen, Protokoll, Alerts folgen der UI-Sprache (setKernelLang); Sprach-Autoload jetzt MERGE statt Replace; Fix: Projekt-Loader akzeptiert Format 2. Live-Verifiziert: EN-Durchlauf komplett ohne deutsche Reste.
 - **14.09.2026 Sichtbarkeit-Paket:** i18n vervollständigt (23 fehlende DE-Keys + Badge — App zeigte vorher Platzhalter), Topics bereinigt (riththal→Rittal-Fix, 18 Topics), README (Screenshot, Direkt-Download, Status v0.2.1), Site-SEO (og:image + twitter:card + Social-Banner + Direkt-Download), Discussions + Starter-Issues (#1 Katalog, #2 Validierung, #3 Custom-Device-Editor), Root-Pages (techflipsi.github.io) mit robots.txt + IndexNow-Key (Bing/Seznam 202)
