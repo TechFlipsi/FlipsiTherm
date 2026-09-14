@@ -1,5 +1,6 @@
 
-const k = require("/root/FlipsiTherm/kernel.js");
+const path = require("path");
+const k = require(path.join(__dirname, "..", "kernel.js"));
 const BASE = { enclosure:{widthB:0.8,heightH:2,depthT:0.6}, mounting:{rear:"free",sides:"free",top:"free"}, material:"stahl_lackiert", components:[] };
 let ok=0, fail=0;
 const t=(n,c)=>{ c?(ok++,console.log("  ok",n)):(fail++,console.log("FAIL:",n)); };
