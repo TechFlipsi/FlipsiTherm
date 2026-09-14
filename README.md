@@ -4,6 +4,8 @@
 
 🌐 **Webseite & Download:** https://techflipsi.github.io/flipsitherm-site/
 
+![FlipsiTherm App](docs/screenshot-app.png)
+
 FlipsiTherm berechnet, welche **Heiz- und Kühlleistung** ein Schaltschrank benötigt
 (Taupunkt/Betauung, Frostschutz, Innentemperatur-Ziel), leitet daraus den nötigen
 **Volumenstrom** für Filterlüfter ab und empfiehlt den **Lösungstyp** (Passiv /
@@ -27,7 +29,7 @@ Cloud-gebunden, login-pflichtig und empfehlen nur Eigenprodukte. FlipsiTherm ist
 
 ## Benutzung
 
-1. `FlipsiTherm.html` herunterladen (oder aus [Releases](../../releases) nehmen)
+1. Aktuellste [`FlipsiTherm.html`](https://github.com/TechFlipsi/FlipsiTherm/releases/latest) herunterladen (Asset „FlipsiTherm.html" im Release)
 2. Doppelklicken — öffnet sich im Browser, fertig.
 3. Projektdaten als JSON speichern/laden, Bericht über den Druckdialog als PDF
    („Microsoft Print to PDF" ist ab Windows 10 vorinstalliert).
@@ -68,11 +70,11 @@ im Protokoll je Ergebniszeile ausgewiesen (Formel + Quelle). Grundmodell:
 
 ## Status & Ehrlichkeit
 
-**v0.1 — Rechenkern + UI, Katalogdaten OBERFLÄCHLICH.** Der Katalog startet mit
-wenigen Beispieldatensätzen, alle markiert `status: "zu_verifizieren"`. Der
-Verifikationsdurchlauf gegen aktuelle Herstellerdaten ist offen — Korrekturen sehr
-willkommen (PR oder Issue). Validierungsbericht (Golden-File-Abgleich gegen
-veröffentlichte Beispielrechnungen) folgt in v0.2.
+**v0.2.1 — Rechenkern + UI + verifizierter Katalog.** 84 Geräte von 4 Herstellern
+(Rittal, Pfannenberg, nVent Hoffman, STEGO), davon **83/84 (99 %) mit Quellen-URL
+verifiziert** (`status: "verifiziert"`, Stichdatum je Datensatz). 64 automatisierte
+Tests (Kernel, Katalog-Schema, UI) in CI. Offen: Golden-File-Validierungsbericht
+gegen veröffentlichte Beispielrechnungen — Korrekturen sehr willkommen (PR oder Issue).
 
 ## Mitmachen
 
