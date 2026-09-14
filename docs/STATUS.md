@@ -1,6 +1,6 @@
 # FlipsiTherm — Projektstatus
 
-Stand: 11.09.2026 · J.A.R.V.I.S. · Repo: https://github.com/TechFlipsi/FlipsiTherm (ÖFFENTLICH)
+Stand: 14.09.2026 · J.A.R.V.I.S. · Repo: https://github.com/TechFlipsi/FlipsiTherm (ÖFFENTLICH)
 
 ## Erledigt (M1+M2+M4 im Mini-Scope, M3 verifiziert)
 
@@ -26,7 +26,8 @@ Stand: 11.09.2026 · J.A.R.V.I.S. · Repo: https://github.com/TechFlipsi/FlipsiT
 - **Daten-only-Sicherheit:** nur JSON.parse-Nachladen + client-seitiger Schema-Check
   (validateCatalog) — korrupte Kataloge werden verworfen, kein eval/new Function
 - **CI:** GitHub Actions — npm install, build, 17 Kernel- + 18 Katalog- + 11 UI-Tests
-- **Release v0.1.0** live; Verifikations-Commit als Folgerelease v0.1.1 geplant
+- **Releases:** v0.1.0, v0.1.1, v0.2.0, v0.2.1 (latest) — v0.2.1 erstmals mit Asset FlipsiTherm.html + SHA256SUMS
+- **14.09.2026 Sichtbarkeit-Paket:** i18n vervollständigt (23 fehlende DE-Keys + Badge — App zeigte vorher Platzhalter), Topics bereinigt (riththal→Rittal-Fix, 18 Topics), README (Screenshot, Direkt-Download, Status v0.2.1), Site-SEO (og:image + twitter:card + Social-Banner + Direkt-Download), Discussions + Starter-Issues (#1 Katalog, #2 Validierung, #3 Custom-Device-Editor), Root-Pages (techflipsi.github.io) mit robots.txt + IndexNow-Key (Bing/Seznam 202)
 
 ## Offen für v0.2+ (Plan §3)
 
