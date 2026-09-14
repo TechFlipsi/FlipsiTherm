@@ -1,7 +1,10 @@
 {
   "_info": "FlipsiTherm UI-Sprache Deutsch (Basislinie, im HTML eingebettet)",
   "app": {
-    "cat_stand": "Katalog-Stand"
+    "subtitle": "Schaltschrank-Klimaauslegung",
+    "cat_stand": "Katalog-Stand",
+    "online_badge": "Katalog {stand} · online aktualisiert",
+    "offline_badge": "Katalog {stand} · eingebettet"
   },
   "steps": {
     "1_title": "Schrank & Aufstellung",
@@ -10,11 +13,28 @@
     "4_title": "Ergebnis & Protokoll"
   },
   "fields": {
+    "width": "Breite (m)",
+    "height": "Höhe (m)",
+    "depth": "Tiefe (m)",
+    "material": "Werkstoff (k-Wert)",
+    "mounting_rear": "Rückseite",
+    "mounting_sides": "Seiten",
+    "mounting_top": "oben / Dach",
+    "tMax": "Umgebung max. (°C)",
+    "tExp": "Erwartete Umgebung (°C)",
+    "tMin": "Umgebung min. (°C)",
+    "rh": "Luftfeuchte (%)",
+    "tInMax": "Innen max. (°C)",
+    "tInMin": "Innen min. / Heizziel (°C)",
     "roomHeating": "Raumaufheizung durch Nachbarschaft (K)",
-    "roomHeating_hint": "Stehen im Aufstellraum weitere Wärme abgebende Anlagen (Schaltschränke, Antriebe)? Dann Umgebungstemperatur um diesen Betrag erhöhen — z. B. +5…8 K in Schaltraum-Maschinenräumen. 0 = kein Einfluss angenommen."
+    "roomHeating_hint": "Stehen im Aufstellraum weitere Wärme abgebende Anlagen (Schaltschränke, Antriebe)? Dann Umgebungstemperatur um diesen Betrag erhöhen — z. B. +5…8 K in Schaltraum-Maschinenräumen. 0 = kein Einfluss angenommen.",
+    "add_component": "Komponente hinzufügen"
   },
   "mounting": {
-    "row": "eine Seite Nachbarschrank / Anreihung"
+    "free": "frei (Luftumgang)",
+    "wall": "Wand / Wandanbau",
+    "row": "eine Seite Nachbarschrank / Anreihung",
+    "covered": "überdacht / abgedeckt"
   },
   "results": {
     "solution_passive": "Passivbetrieb ausreichend",
@@ -40,6 +60,11 @@
     "print": "Protokoll drucken (PDF)"
   },
   "common": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "calculate": "Berechnen",
+    "save_project": "Projekt speichern",
+    "load_project": "Projekt laden",
     "optional": "optional"
   },
   "customers": {

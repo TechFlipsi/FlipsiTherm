@@ -59,7 +59,8 @@ function test(name, fn) {
   });
   await test("Offline-Badge gesetzt (Auto-Refresh scheitert sauber im Test)", () => {
     const b = document.getElementById("catalogBadge").textContent;
-    if (!b.includes("offline")) throw new Error("Badge: " + b);
+    // Sprachunabhängig: Badge muss den eingebetteten Katalog-Stand zeigen und NICHT den Online-Zustand behaupten
+    if (!b.includes("2026-09-11") || /online aktualisiert|refreshed online/.test(b)) throw new Error("Badge: " + b);
   });
   await test("Sprachmenü enthält DE + EN", () => {
     const opts = [...document.querySelectorAll("#langSel option")].map(o => o.value);

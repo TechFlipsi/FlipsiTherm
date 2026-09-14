@@ -1,7 +1,10 @@
 {
   "_info": "FlipsiTherm UI language English (embedded baseline)",
   "app": {
-    "cat_stand": "Catalog state"
+    "subtitle": "Control cabinet climate sizing",
+    "cat_stand": "Catalog state",
+    "online_badge": "Catalog {stand} · refreshed online",
+    "offline_badge": "Catalog {stand} · embedded"
   },
   "steps": {
     "1_title": "Enclosure & mounting",
@@ -10,11 +13,28 @@
     "4_title": "Result & report"
   },
   "fields": {
+    "width": "Width (m)",
+    "height": "Height (m)",
+    "depth": "Depth (m)",
+    "material": "Material (k-value)",
+    "mounting_rear": "Rear side",
+    "mounting_sides": "Sides",
+    "mounting_top": "top / roof",
+    "tMax": "Ambient max. (°C)",
+    "tExp": "Expected ambient (°C)",
+    "tMin": "Ambient min. (°C)",
+    "rh": "Humidity (%)",
+    "tInMax": "Interior max. (°C)",
+    "tInMin": "Interior min. / heating target (°C)",
     "roomHeating": "Room heating by adjacent equipment (K)",
-    "roomHeating_hint": "If other heat-releasing equipment (enclosures) sits in the same room, raise all ambient temperatures by this amount — e.g. +5 K in machine rooms. 0 = assumed no influence."
+    "roomHeating_hint": "If other heat-releasing equipment (enclosures, drives) sits in the same room, raise ambient temperatures by this amount — e.g. +5…8 K in switchgear rooms. 0 = assumed no influence.",
+    "add_component": "Add component"
   },
   "mounting": {
-    "row": "one side neighbour / bayed"
+    "free": "free (air circulation)",
+    "wall": "wall-mounted",
+    "row": "one side neighbour / bayed",
+    "covered": "covered / shielded"
   },
   "results": {
     "solution_passive": "Passive operation sufficient",
@@ -35,11 +55,16 @@
     "inputs": "Input values",
     "calculation": "Calculation",
     "formula": "Formula",
-    "norm": "Norm reference",
-    "footer_note": "Created with FlipsiTherm — open calculation, all formulas documented.",
+    "norm": "Standard reference",
+    "footer_note": "Created with FlipsiTherm — open calculation, all formulas documented in the repository.",
     "print": "Print report (PDF)"
   },
   "common": {
+    "back": "Back",
+    "next": "Next",
+    "calculate": "Calculate",
+    "save_project": "Save project",
+    "load_project": "Load project",
     "optional": "optional"
   },
   "customers": {
