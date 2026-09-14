@@ -193,5 +193,9 @@
     "none": "kein Kunde gewählt",
     "projectname": "Projektname / Auftragsnummer",
     "dup": "Dieser Kunde existiert bereits (Name eindeutig) — zum Ändern den bestehenden Eintrag löschen."
+  },
+  "discord": {
+    "label": "Fragen / Verbesserung? Hier klicken",
+    "title": "Community-Discord: Fragen stellen, Wünsche & Bug-Meldungen loswerden"
   }
 }

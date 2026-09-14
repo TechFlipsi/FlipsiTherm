@@ -193,5 +193,9 @@
     "none": "no customer selected",
     "projectname": "Project name / order number",
     "dup": "This customer already exists (names must be unique) — edit the existing entry instead."
+  },
+  "discord": {
+    "label": "Questions / improvements? Click here",
+    "title": "Community Discord: ask questions, share ideas & bug reports"
   }
 }

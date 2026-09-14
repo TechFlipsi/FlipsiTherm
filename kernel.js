@@ -413,7 +413,7 @@
 
     return {
       meta: {
-        tool: "FlipsiTherm", version: "0.2.4",
+        tool: "FlipsiTherm", version: "0.2.5",
         normRefs: [
           tr("norm1"), tr("norm2")
         ]
