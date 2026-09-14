@@ -43,7 +43,77 @@
   };
 
   var HEATING_RESERVE = 1.15;   // Sicherheitszuschlag Heizleistung
-  var AIR_FLOW_FACTOR = 3.1;    // m³·K/(W·h) bei Meereshöhe
+  /**
+   * Sprach-Tag des Kernels: "de" | "en". Die UI setzt ihn via setKernelLang()
+   * (bzw. state.lang-Prop beim Boot). Alle Nutzer-Meldungen (Fehler, Warnungen,
+   * Annahmen, Notizen) folgen dieser Sprache.
+   */
+  var kernelLang = "de";
+  function setKernelLang(l) { kernelLang = (l === "en") ? "en" : "de"; }
+  function getKernelLang() { return kernelLang; }
+
+  /** Zweitsprachige Meldungen des Rechenkerns */
+  var MSG = {
+    width_range: { de: "Breite B muss zwischen 0,1 und 6 m liegen", en: "Width B must be between 0.1 and 6 m" },
+    height_range: { de: "Höhe H muss zwischen 0,1 und 4 m liegen", en: "Height H must be between 0.1 and 4 m" },
+    depth_range: { de: "Tiefe T muss zwischen 0,05 und 3 m liegen", en: "Depth T must be between 0.05 and 3 m" },
+    material_missing: { de: "Werkstoff nicht gewählt", en: "Material not selected" },
+    no_case: { de: "Weder Kühl- noch Heizfall ausgefüllt: mind. maximale Umgebungstemperatur + zulässige Innentemperatur (Kühlung) ODER minimale Umgebungstemperatur (Heizung) angeben", en: "Neither cooling nor heating case filled in: provide at least maximum ambient temperature + permissible interior temperature (cooling) OR minimum ambient temperature (heating)" },
+    tmax_implausible: { de: "Maximale Umgebungstemperatur unplausibel (−55…+70 °C)", en: "Maximum ambient temperature implausible (−55…+70 °C)" },
+    tinmax_implausible: { de: "Zulässige Innentemperatur unplausibel (0…+80 °C)", en: "Permissible interior temperature implausible (0…+80 °C)" },
+    tmin_implausible: { de: "Minimale Umgebungstemperatur unplausibel (−55…+20 °C)", en: "Minimum ambient temperature implausible (−55…+20 °C)" },
+    rh_implausible: { de: "Luftfeuchte muss zwischen 1 und 100 % liegen", en: "Humidity must be between 1 and 100 %" },
+    texp_implausible: { de: "Erwartete Umgebungstemperatur unplausibel (−55…+70 °C)", en: "Expected ambient temperature implausible (−55…+70 °C)" },
+    tinmin_implausible: { de: "Heizziel-Innentemperatur unplausibel (−30…+60 °C)", en: "Heating-target interior temperature implausible (−30…+60 °C)" },
+    roomheating_range: { de: "Raumaufheizung 0…30 K", en: "Room heating 0…30 K" },
+    warn_filterfan_useless: { de: "Zulässige Innentemperatur ≤ maximale Umgebungstemperatur: Filterlüftung wirkungslos — es wird ein Kühlgerät bemessen (erwartetes Verhalten, falls Kühlgerät gewünscht)", en: "Permissible interior temperature ≤ maximum ambient temperature: filter ventilation ineffective — a cooling unit is sized (expected behaviour if a cooling unit is desired)" },
+    warn_tinmax60: { de: "Innentemperatur > 60 °C: nur mit Bauteilen zulässig, deren Datenblatt das hergibt (EN 61439 üblich ≤ 40 °C)", en: "Interior temperature > 60 °C: only permitted with components whose datasheet allows it (EN 61439 typically ≤ 40 °C)" },
+    warn_heating_no_effect: { de: "Heizziel liegt auf/unter der minimalen Umgebungstemperatur: die Heizung hat dann keine Wirkung (ΔT ≤ 0) — Angabe prüfen", en: "Heating target at/below minimum ambient temperature: the heater then has no effect (ΔT ≤ 0) — check the input" },
+    warn_texp_gt_tmax: { de: "Erwartete Umgebungstemperatur ist höher als die maximale: bitte prüfen (max. sollte ≥ erwartet sein)", en: "Expected ambient temperature is higher than the maximum: please check (max should be ≥ expected)" },
+    load_factor_range: { de: "Auslastung a muss 0…1 sein", en: "Load factor a must be 0…1" },
+    watts_range: { de: "Verlustleistung 0,1…50 000 W angeben", en: "Power dissipation 0.1…50 000 W required" },
+    pout_range: { de: "Ausgangsleistung 0,1…50 000 W angeben", en: "Output power 0.1…50 000 W required" },
+    pn_range: { de: "Nennleistung 0,1…2 000 000 W angeben", en: "Rated power 0.1…2 000 000 W required" },
+    pmech_range: { de: "mechanische Leistung 0,1…2 000 000 W angeben", en: "mechanical power 0.1…2 000 000 W required" },
+    iload_range: { de: "Betriebsstrom 0,05…2 500 A angeben", en: "Operating current 0.05…2 500 A required" },
+    du_range: { de: "ΔU 0…5 V", en: "ΔU 0…5 V" },
+    efficiency_range: { de: "Wirkungsgrad 0,3…0,999", en: "Efficiency 0.3…0.999" },
+    comp_n: { de: "Komponente {n}", en: "Component {n}" },
+    more_errors: { de: " (+ {n} weitere)", en: " (+ {n} more)" },
+    eta_ps: { de: "η=0,93 angenommen (typ. Schaltnetzteil)", en: "η=0.93 assumed (typical SMPS)" },
+    eta_drive: { de: "η=0,97 für Umrichter angenommen (Forum-/Herstellertabellen)", en: "η=0.97 assumed for drives (forum/manufacturer tables)" },
+    eta_trafo: { de: "η=0,95 für Trafo angenommen", en: "η=0.95 assumed for transformers" },
+    eta_motor: { de: "η=0,85 für Motor angenommen", en: "η=0.85 assumed for motors" },
+    eta_du: { de: "ΔU=0,5 V angenommen (typ. Einfügedämpfung Netzfilter)", en: "ΔU=0.5 V assumed (typical line-filter insertion attenuation)" },
+    unknown_comp: { de: "Unbekannter Komponententyp: {t}", en: "Unknown component type: {t}" },
+    room_heating: { de: "Raumaufheizung durch benachbarte Anlagen im Aufstellraum: +{k} K auf alle Umgebungstemperaturen addiert", en: "Room heating from adjacent equipment in the installation room: +{k} K added to all ambient temperatures" },
+    rh_default: { de: "Relative Luftfeuchte nicht angegeben: {rh} % r. F. angenommen (nur relevant für den Taupunkt)", en: "Relative humidity not specified: {rh} % r. h. assumed (only relevant for the dew point)" },
+    altitude: { de: "Höhe über NN {alt} m: Luftdichte-Korrektur des Volumenstroms vorbehalten (Ergebnis konservativ ohne Korrektur)", en: "Altitude {alt} m: air-density correction of the volume flow reserved (result conservative without correction)" },
+    texp_default: { de: "Erwartete Umgebungstemperatur nicht angegeben: tExp={v} °C angenommen (Taupunkt-Referenz, FISEKON-Konvention)", en: "Expected ambient temperature not specified: tExp={v} °C assumed (dew-point reference, FISEKON convention)" },
+    tinmin_default: { de: "Heizziel-Innentemperatur nicht angegeben: {v} °C angenommen (typ. Frostschutz-Betriebsfall)", en: "Heating-target interior temperature not specified: {v} °C assumed (typical frost-protection case)" },
+    dew_over_target: { de: "Taupunkt {d} °C liegt ÜBER der Ziel-Innentemperatur {t} °C: Heizungs-Sollwert muss mindestens auf den Taupunkt gestellt werden, sonst Betauung trotz Heizbetrieb", en: "Dew point {d} °C is ABOVE the target interior temperature {t} °C: the heater setpoint must be set to at least the dew point, otherwise condensation despite heating" },
+    note_cooling_unit: { de: "Umgebung ≥ zulässige Innentemperatur: Filterlüftung wirkungslos, Kühlgerät erforderlich (Ein Lüfter kann nicht unter Umgebungstemperatur kühlen).", en: "Ambient ≥ permissible interior temperature: filter ventilation ineffective, cooling unit required (a fan cannot cool below ambient temperature)." },
+    note_filterfan: { de: "Bei starker Verschmutzung/Öl: Luft-Luft-Wärmetauscher als geschlossene Alternative zum Filterlüfter.", en: "With heavy dust/oil: air/air heat exchanger as a closed alternative to the filter fan." },
+    note_passive: { de: "Passiver Betrieb ausreichend: die Hülle führt die Verlustwärme vollständig ab.", en: "Passive operation sufficient: the enclosure fully dissipates the loss heat." },
+    note_condensation: { de: "Betauung ist bemessungsrelevant: Taupunkt {d} °C (bei erwarteter Umgebung {e} °C / {rh} % r. F.) liegt über der minimalen Umgebungstemperatur {m} °C. Heizung mit Hygrostat wählen.", en: "Condensation governs the design: dew point {d} °C (at expected ambient {e} °C / {rh} % r. h.) is above the minimum ambient temperature {m} °C. Choose a heater with hygrostat." },
+    note_frost: { de: "Frostschutz ist bemessungsrelevant.", en: "Frost protection governs the design." },
+    side_both_wall: { de: "beide an Wand/Anreihung", en: "both at wall/baying" },
+    side_one_wall: { de: "eine Seite Nachbarschrank/Wand", en: "one side neighbour cabinet/wall" },
+    side_free: { de: "beide frei", en: "both free" },
+    rear_wall: { de: "an Wand", en: "at wall" },
+    rear_free: { de: "frei", en: "free" },
+    top_covered: { de: "abgedeckt", en: "covered" },
+    top_free: { de: "frei", en: "free" },
+    norm1: { de: "IEC TR 60890 (DE: DIN VDE 0660-507) — Temperaturerhöhung / b-Faktoren", en: "IEC TR 60890 (DE: DIN VDE 0660-507) — temperature rise / b-factors" },
+    norm2: { de: "EN 61439-1 Abschnitt 7.1 — Übliche Betriebsbedingungen", en: "EN 61439-1 section 7.1 — ordinary operating conditions" }
+  };
+  function tr(key, vars) {
+    var s = MSG[key] ? MSG[key][kernelLang] : key;
+    if (vars) for (var k in vars) s = s.replace("{" + k + "}", vars[k]);
+    return s;
+  }
+
+  var AIR_FLOW_FACTOR = 3.1;    // m³·K/(W·h) at sea level
   var DEFAULT_RH = 60;          // % r. F. wenn nicht angegeben (Annahme wird gemeldet)
   var DEFAULT_TEXP = 25;        // °C erwartete Umgebung (Taupunkt-Referenz, FISEKON-Konvention)
   var DEFAULT_TINMIN = 5;       // °C Heizziel wenn nicht angegeben (typ. Frostschutz)
@@ -81,15 +151,15 @@
     var fRear = m.rear === "wall" ? SURFACE_FACTORS.rear_wall : SURFACE_FACTORS.rear_free;
     var fTop = m.top === "covered" ? SURFACE_FACTORS.top_covered : SURFACE_FACTORS.top_free;
     var fSideL, fSideR, noteSide;
-    if (m.sides === "wall") { fSideL = SURFACE_FACTORS.side_wall; fSideR = SURFACE_FACTORS.side_wall; noteSide = "beide an Wand/Anreihung"; }
-    else if (m.sides === "row") { fSideL = SURFACE_FACTORS.side_wall; fSideR = SURFACE_FACTORS.side_free; noteSide = "eine Seite Nachbarschrank/Wand"; }
-    else { fSideL = SURFACE_FACTORS.side_free; fSideR = SURFACE_FACTORS.side_free; noteSide = "beide frei"; }
+    if (m.sides === "wall") { fSideL = SURFACE_FACTORS.side_wall; fSideR = SURFACE_FACTORS.side_wall; noteSide = tr("side_both_wall"); }
+    else if (m.sides === "row") { fSideL = SURFACE_FACTORS.side_wall; fSideR = SURFACE_FACTORS.side_free; noteSide = tr("side_one_wall"); }
+    else { fSideL = SURFACE_FACTORS.side_free; fSideR = SURFACE_FACTORS.side_free; noteSide = tr("side_free"); }
     var parts = {
       front: { factor: SURFACE_FACTORS.front, raw: B * H, area: SURFACE_FACTORS.front * B * H },
-      rear: { factor: fRear, raw: B * H, raw_note: m.rear === "wall" ? "an Wand" : "frei", area: fRear * B * H },
+      rear: { factor: fRear, raw: B * H, raw_note: m.rear === "wall" ? tr("rear_wall") : tr("rear_free"), area: fRear * B * H },
       sideLeft: { factor: fSideL, raw: T * H, raw_note: noteSide, area: fSideL * T * H },
       sideRight: { factor: fSideR, raw: T * H, area: fSideR * T * H },
-      top: { factor: fTop, raw: B * T, raw_note: m.top === "covered" ? "abgedeckt" : "frei", area: fTop * B * T },
+      top: { factor: fTop, raw: B * T, raw_note: m.top === "covered" ? tr("top_covered") : tr("top_free"), area: fTop * B * T },
       bottom: { factor: SURFACE_FACTORS.bottom, raw: B * T, area: SURFACE_FACTORS.bottom * B * T }
     };
     var area = 0, k;
@@ -107,10 +177,10 @@
     var eta, assumption = null;
     switch (c.type) {
       case "direct":
-        return { losses: c.watts * f, formula: "P_v = " + c.watts + " W · a=" + f + " (Datenblatt · Auslastung)", assumption: null };
+        return { losses: c.watts * f, formula: "P_v = " + c.watts + " W · a=" + f + (kernelLang === "en" ? " (datasheet · load)" : " (Datenblatt · Auslastung)"), assumption: null };
       case "power_supply":
         eta = c.efficiency == null ? 0.93 : c.efficiency;
-        assumption = c.efficiency == null ? "η=0,93 angenommen (typ. Schaltnetzteil)" : null;
+        assumption = c.efficiency == null ? tr("eta_ps") : null;
         return {
           losses: c.P_out_W * (1 - eta) / eta * f,
           formula: "P_v = P_out · (1−η)/η · a = " + c.P_out_W + " · (1−" + eta + ")/" + eta + " · " + f,
@@ -118,7 +188,7 @@
         };
       case "drive":
         eta = c.efficiency == null ? 0.97 : c.efficiency;
-        assumption = c.efficiency == null ? "η=0,97 für Umrichter angenommen (Forum-/Herstellertabellen)" : null;
+        assumption = c.efficiency == null ? tr("eta_drive") : null;
         return {
           losses: c.P_N_W * (1 - eta) / eta * f,
           formula: "P_v = P_N · (1−η)/η · a = " + c.P_N_W + " W · (1−" + eta + ")/" + eta + " · " + f,
@@ -126,7 +196,7 @@
         };
       case "transformer":
         eta = c.efficiency == null ? 0.95 : c.efficiency;
-        assumption = c.efficiency == null ? "η=0,95 für Trafo angenommen" : null;
+        assumption = c.efficiency == null ? tr("eta_trafo") : null;
         return {
           losses: c.P_N_W * (1 - eta) / eta * f,
           formula: "P_v = P_N · (1−η)/η · a",
@@ -134,7 +204,7 @@
         };
       case "motor":
         eta = c.efficiency == null ? 0.85 : c.efficiency;
-        assumption = c.efficiency == null ? "η=0,85 für Motor angenommen" : null;
+        assumption = c.efficiency == null ? tr("eta_motor") : null;
         return {
           losses: c.P_mech_W * (1 - eta) / eta * f,
           formula: "P_v = P_mech · (1−η)/η · a",
@@ -142,14 +212,14 @@
         };
       case "netfilter":
         var dU = c.deltaU_V == null ? 0.5 : c.deltaU_V;
-        assumption = c.deltaU_V == null ? "ΔU=0,5 V angenommen (typ. Einfügedämpfung Netzfilter)" : null;
+        assumption = c.deltaU_V == null ? tr("eta_du") : null;
         return {
           losses: dU * c.I_load_A * f,
           formula: "P_v = ΔU · I_b = " + dU + " V · " + c.I_load_A + " A · " + f,
           assumption: assumption
         };
       default:
-        throw new Error("Unbekannter Komponententyp: " + c.type);
+        throw new Error(tr("unknown_comp", {t: c.type}));
     }
   }
 
@@ -179,51 +249,51 @@
     function need(cond, msg) { if (!cond) errors.push(msg); }
     function inRange(x, lo, hi) { return typeof x === "number" && isFinite(x) && x >= lo && x <= hi; }
 
-    need(inRange(e.widthB, 0.1, 6), "Breite B muss zwischen 0,1 und 6 m liegen");
-    need(inRange(e.heightH, 0.1, 4), "Höhe H muss zwischen 0,1 und 4 m liegen");
-    need(inRange(e.depthT, 0.05, 3), "Tiefe T muss zwischen 0,05 und 3 m liegen");
-    need(K_VALUES[input.material] != null, "Werkstoff nicht gewählt");
+    need(inRange(e.widthB, 0.1, 6), tr("width_range"));
+    need(inRange(e.heightH, 0.1, 4), tr("height_range"));
+    need(inRange(e.depthT, 0.05, 3), tr("depth_range"));
+    need(K_VALUES[input.material] != null, tr("material_missing"));
 
     var hasCooling = inRange(env.tMax, -55, 70) && inRange(tgt.tInMax, 0, 80);
     var hasHeating = inRange(env.tMin, -55, 20);
     if (!hasCooling && !hasHeating) {
-      errors.push("Weder Kühl- noch Heizfall ausgefüllt: mind. maximale Umgebungstemperatur + zulässige Innentemperatur (Kühlung) ODER minimale Umgebungstemperatur (Heizung) angeben");
+      errors.push(tr("no_case"));
     }
-    if (inRange(env.tMax, -55, 70) !== !!env.tMax && env.tMax != null && !inRange(env.tMax, -55, 70)) errors.push("Maximale Umgebungstemperatur unplausibel (−55…+70 °C)");
-    if (env.tMax != null && !inRange(env.tMax, -55, 70)) errors.push("Maximale Umgebungstemperatur unplausibel (−55…+70 °C)");
-    if (tgt.tInMax != null && !inRange(tgt.tInMax, 0, 80)) errors.push("Zulässige Innentemperatur unplausibel (0…+80 °C)");
-    if (env.tMin != null && !inRange(env.tMin, -55, 20)) errors.push("Minimale Umgebungstemperatur unplausibel (−55…+20 °C)");
-    if (env.rhPercent != null && !inRange(env.rhPercent, 1, 100)) errors.push("Luftfeuchte muss zwischen 1 und 100 % liegen");
-    if (env.tExp != null && !inRange(env.tExp, -55, 70)) errors.push("Erwartete Umgebungstemperatur unplausibel (−55…+70 °C)");
-    if (tgt.tInMin != null && !inRange(tgt.tInMin, -30, 60)) errors.push("Heizziel-Innentemperatur unplausibel (−30…+60 °C)");
-    if (env.roomHeatingK != null && !inRange(env.roomHeatingK, 0, 30)) errors.push("Raumaufheizung 0…30 K");
+    if (inRange(env.tMax, -55, 70) !== !!env.tMax && env.tMax != null && !inRange(env.tMax, -55, 70)) errors.push(tr("tmax_implausible"));
+    if (env.tMax != null && !inRange(env.tMax, -55, 70)) errors.push(tr("tmax_implausible"));
+    if (tgt.tInMax != null && !inRange(tgt.tInMax, 0, 80)) errors.push(tr("tinmax_implausible"));
+    if (env.tMin != null && !inRange(env.tMin, -55, 20)) errors.push(tr("tmin_implausible"));
+    if (env.rhPercent != null && !inRange(env.rhPercent, 1, 100)) errors.push(tr("rh_implausible"));
+    if (env.tExp != null && !inRange(env.tExp, -55, 70)) errors.push(tr("texp_implausible"));
+    if (tgt.tInMin != null && !inRange(tgt.tInMin, -30, 60)) errors.push(tr("tinmin_implausible"));
+    if (env.roomHeatingK != null && !inRange(env.roomHeatingK, 0, 30)) errors.push(tr("roomheating_range"));
 
     if (hasCooling && tgt.tInMax <= env.tMax) {
-      warnings.push("Zulässige Innentemperatur ≤ maximale Umgebungstemperatur: Filterlüftung wirkungslos — es wird ein Kühlgerät bemessen (erwartetes Verhalten, falls Kühlgerät gewünscht)");
+      warnings.push(tr("warn_filterfan_useless"));
     }
     if (hasCooling && tgt.tInMax > 60) {
-      warnings.push("Innentemperatur > 60 °C: nur mit Bauteilen zulässig, deren Datenblatt das hergibt (EN 61439 üblich ≤ 40 °C)");
+      warnings.push(tr("warn_tinmax60"));
     }
     if (hasHeating && tgt.tInMin != null && tgt.tInMin <= env.tMin) {
-      warnings.push("Heizziel liegt auf/unter der minimalen Umgebungstemperatur: die Heizung hat dann keine Wirkung (ΔT ≤ 0) — Angabe prüfen");
+      warnings.push(tr("warn_heating_no_effect"));
     }
     if (env.tExp != null && env.tMax != null && env.tExp > env.tMax) {
-      warnings.push("Erwartete Umgebungstemperatur ist höher als die maximale: bitte prüfen (max. sollte ≥ erwartet sein)");
+      warnings.push(tr("warn_texp_gt_tmax"));
     }
 
     (input.components || []).forEach(function (c, i) {
-      var n = c.name || ("Komponente " + (i + 1));
-      if (!inRange(c.loadFactor == null ? 1 : c.loadFactor, 0, 1)) errors.push(n + ": Auslastung a muss 0…1 sein");
-      if (c.type === "direct" && !inRange(c.watts, 0.1, 50000)) errors.push(n + ": Verlustleistung 0,1…50 000 W angeben");
-      if (c.type === "power_supply" && !inRange(c.P_out_W, 0.1, 50000)) errors.push(n + ": Ausgangsleistung 0,1…50 000 W angeben");
-      if (c.type === "drive" && !inRange(c.P_N_W, 0.1, 2000000)) errors.push(n + ": Nennleistung 0,1…2 000 000 W angeben");
-      if (c.type === "transformer" && !inRange(c.P_N_W, 0.1, 2000000)) errors.push(n + ": Nennleistung 0,1…2 000 000 W angeben");
-      if (c.type === "motor" && !inRange(c.P_mech_W, 0.1, 2000000)) errors.push(n + ": mechanische Leistung 0,1…2 000 000 W angeben");
+      var n = c.name || tr("comp_n", {n: i + 1});
+      if (!inRange(c.loadFactor == null ? 1 : c.loadFactor, 0, 1)) errors.push(n + ": " + tr("load_factor_range"));
+      if (c.type === "direct" && !inRange(c.watts, 0.1, 50000)) errors.push(n + ": " + tr("watts_range"));
+      if (c.type === "power_supply" && !inRange(c.P_out_W, 0.1, 50000)) errors.push(n + ": " + tr("pout_range"));
+      if (c.type === "drive" && !inRange(c.P_N_W, 0.1, 2000000)) errors.push(n + ": " + tr("pn_range"));
+      if (c.type === "transformer" && !inRange(c.P_N_W, 0.1, 2000000)) errors.push(n + ": " + tr("pn_range"));
+      if (c.type === "motor" && !inRange(c.P_mech_W, 0.1, 2000000)) errors.push(n + ": " + tr("pmech_range"));
       if (c.type === "netfilter") {
-        if (!inRange(c.I_load_A, 0.05, 2500)) errors.push(n + ": Betriebsstrom 0,05…2 500 A angeben");
-        if (c.deltaU_V != null && !inRange(c.deltaU_V, 0, 5)) errors.push(n + ": ΔU 0…5 V");
+        if (!inRange(c.I_load_A, 0.05, 2500)) errors.push(n + ": " + tr("iload_range"));
+        if (c.deltaU_V != null && !inRange(c.deltaU_V, 0, 5)) errors.push(n + ": " + tr("du_range"));
       }
-      if (c.efficiency != null && !inRange(c.efficiency, 0.3, 0.999)) errors.push(n + ": Wirkungsgrad 0,3…0,999");
+      if (c.efficiency != null && !inRange(c.efficiency, 0.3, 0.999)) errors.push(n + ": " + tr("efficiency_range"));
     });
 
     return { errors: errors, warnings: warnings, hasCooling: hasCooling, hasHeating: hasHeating };
@@ -238,7 +308,7 @@
    */
   function calculate(input) {
     var v = validateInput(input);
-    if (v.errors.length) { throw new Error(v.errors[0] + (v.errors.length > 1 ? " (+ " + (v.errors.length - 1) + " weitere)" : "")); }
+    if (v.errors.length) { throw new Error(v.errors[0] + (v.errors.length > 1 ? tr("more_errors", {n: v.errors.length - 1}) : "")); }
 
     var e = input.enclosure;
     var m = input.mounting || {};
@@ -260,10 +330,10 @@
     var k = K_VALUES[input.material];
     var assumptions = losses.assumptions.slice();
 
-    if (roomK) { assumptions.push("Raumaufheizung durch benachbarte Anlagen im Aufstellraum: +" + roomK + " K auf alle Umgebungstemperaturen addiert"); }
-    if (env.rhPercent == null) { env.rhPercent = DEFAULT_RH; assumptions.push("Relative Luftfeuchte nicht angegeben: " + DEFAULT_RH + " % r. F. angenommen (nur relevant für den Taupunkt)"); }
+    if (roomK) { assumptions.push(tr("room_heating", {k: roomK})); }
+    if (env.rhPercent == null) { env.rhPercent = DEFAULT_RH; assumptions.push(tr("rh_default", {rh: DEFAULT_RH})); }
     if (env.altitude_m != null && env.altitude_m > 1000) {
-      assumptions.push("Höhe über NN " + env.altitude_m + " m: Luftdichte-Korrektur des Volumenstroms vorbehalten (Ergebnis konservativ ohne Korrektur)");
+      assumptions.push(tr("altitude", {alt: env.altitude_m}));
     }
 
     // --- Kühlung (optional) ---
@@ -286,8 +356,8 @@
         fanPossible: fanPossible,
         solution: solution,
         note: solution === "cooling_unit"
-          ? "Umgebung ≥ zulässige Innentemperatur: Filterlüftung wirkungslos, Kühlgerät erforderlich (Ein Lüfter kann nicht unter Umgebungstemperatur kühlen)."
-          : (solution === "filterfan" ? "Bei starker Verschmutzung/Öl: Luft-Luft-Wärmetauscher als geschlossene Alternative zum Filterlüfter." : "Passiver Betrieb ausreichend: die Hülle führt die Verlustwärme vollständig ab.")
+          ? tr("note_cooling_unit")
+          : (solution === "filterfan" ? tr("note_filterfan") : tr("note_passive"))
       };
     }
 
@@ -296,8 +366,8 @@
     if (env.tMin != null) {
       var tInMin = tgt.tInMin == null ? DEFAULT_TINMIN : tgt.tInMin;
       var tExp = env.tExp == null ? DEFAULT_TEXP : env.tExp;
-      if (env0.tExp == null) { assumptions.push("Erwartete Umgebungstemperatur nicht angegeben: tExp=" + DEFAULT_TEXP + " °C angenommen (Taupunkt-Referenz, FISEKON-Konvention)"); }
-      if (tgt.tInMin == null) { assumptions.push("Heizziel-Innentemperatur nicht angegeben: " + tInMin + " °C angenommen (typ. Frostschutz-Betriebsfall)"); }
+      if (env0.tExp == null) { assumptions.push(tr("texp_default", {v: DEFAULT_TEXP})); }
+      if (tgt.tInMin == null) { assumptions.push(tr("tinmin_default", {v: tInMin})); }
       var dewRef = dewPoint(tExp, env.rhPercent);
       var dT_heat_frost = tInMin - env.tMin;
       var dT_heat_dew = dewRef - env.tMin;
@@ -308,7 +378,7 @@
       var pHeater = Math.max(pFrost, pDew);
       var condensationGoverns = pDew > pFrost;
       if (dewRef > tInMin) {
-        assumptions.push("Taupunkt " + round(dewRef, 1) + " °C liegt ÜBER der Ziel-Innentemperatur " + tInMin + " °C: Heizungs-Sollwert muss mindestens auf den Taupunkt gestellt werden, sonst Betauung trotz Heizbetrieb");
+        assumptions.push(tr("dew_over_target", {d: round(dewRef, 1), t: tInMin}));
       }
       heating = {
         tAmbMin: env.tMin,
@@ -323,8 +393,8 @@
         required: pHeater,
         condensationGoverns: condensationGoverns,
         note: condensationGoverns
-          ? "Betauung ist bemessungsrelevant: Taupunkt " + round(dewRef, 1) + " °C (bei erwarteter Umgebung " + tExp + " °C / " + env.rhPercent + " % r. F.) liegt über der minimalen Umgebungstemperatur " + env.tMin + " °C. Heizung mit Hygrostat wählen."
-          : "Frostschutz ist bemessungsrelevant."
+          ? tr("note_condensation", {d: round(dewRef, 1), e: tExp, rh: env.rhPercent, m: env.tMin})
+          : tr("note_frost")
       };
     }
 
@@ -332,8 +402,7 @@
       meta: {
         tool: "FlipsiTherm", version: "0.2.0",
         normRefs: [
-          "IEC TR 60890 (DE: DIN VDE 0660-507) — Temperaturerhöhung / b-Faktoren",
-          "EN 61439-1 Abschnitt 7.1 — Übliche Betriebsbedingungen"
+          tr("norm1"), tr("norm2")
         ]
       },
       surface: surf,
@@ -350,6 +419,8 @@
 
   // Öffentliches API
   return {
+    setKernelLang: setKernelLang,
+    getKernelLang: getKernelLang,
     K_VALUES: K_VALUES,
     SURFACE_FACTORS: SURFACE_FACTORS,
     EN61439: EN61439,

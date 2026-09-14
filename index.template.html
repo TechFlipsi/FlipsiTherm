@@ -98,7 +98,7 @@ th{color:var(--ink-soft);font-weight:600}
     <button class="btn ghost small" id="btnCustomers" data-i18n="customers.manage">Kunden</button>
     <button class="btn ghost small" id="btnSave" data-i18n="common.save_project">Projekt speichern</button>
     <button class="btn ghost small" id="btnLoad" data-i18n="common.load_project">Projekt laden</button>
-    <button class="btn ghost small" id="btnCustomCat">Firmen-Katalog laden</button>
+    <button class="btn ghost small" id="btnCustomCat" data-i18n="msg.custom_catalog">Firmen-Katalog laden</button>
     <input type="file" id="fileProject" accept=".json" style="display:none">
     <input type="file" id="fileCustomCat" accept=".json" style="display:none">
   </div>
@@ -206,11 +206,20 @@ async function autoRefresh(){ // NUR Daten nachladen (JSON) — niemals Code
     }
     var langIdx = await fetchJSON(DATA_BASE+"data/lang/index.json").catch(function(){ return {languages:[]}; });
     for (var li of (langIdx.languages||[])){
-      try{ var raw = await fetchJSON(DATA_BASE+"data/lang/"+li+".json"); EMBEDDED.lang[li] = flatten(raw); }catch(e){}
+      try{
+        var raw = await fetchJSON(DATA_BASE+"data/lang/"+li+".json");
+        // MERGE statt Replace: eingebettete Basis-Keys bleiben erhalten, online kommen nur Zusätze/Updates dazu.
+        var merged = {};
+        for (var k in EMBEDDED.lang[li]) merged[k] = EMBEDDED.lang[li][k];
+        var flat = flatten(raw);
+        for (var k2 in flat) merged[k2] = flat[k2];
+        EMBEDDED.lang[li] = merged;
+      }catch(e){}
     }
     refreshLangMenu();
     setBadge(EMBEDDED.config.catalogStand, true);
     mergeCatalogs();
+    applyI18n();
   }catch(e){ setBadge(EMBEDDED.config.catalogStand, false); }
 }
 function refreshLangMenu(){
@@ -267,16 +276,16 @@ function renderStep(){
       '<div><label>'+t("customers.projectname")+'</label><input type="text" id="projTitle" value="'+esc(p.customer.ref||"")+'" data-proj="ref"></div></div><div class="grid" style="margin-top:12px">'+
       numInput(t("fields.width"),"widthB","enclosure")+numInput(t("fields.height"),"heightH","enclosure")+numInput(t("fields.depth"),"depthT","enclosure")+
       '<div><label>'+t("fields.material")+'</label><select data-bind="material" data-step="_material">'+
-      '<option value="stahl_lackiert"'+(p.material==="stahl_lackiert"?" selected":"")+'>Stahlblech lackiert (k=5,5)</option>'+
-      '<option value="edelstahl"'+(p.material==="edelstahl"?" selected":"")+'>Edelstahl (k=3,7)</option>'+
-      '<option value="aluminium"'+(p.material==="aluminium"?" selected":"")+'>Aluminium (k=12,0)</option>'+
-      '<option value="polyester"'+(p.material==="polyester"?" selected":"")+'>Polyester (k=3,5)</option>'+
-      '<option value="doppelwand"'+(p.material==="doppelwand"?" selected":"")+'>Doppelwand (k=4,5)</option></select></div></div>'+
-      '<fieldset><legend>Aufstellung</legend><div class="grid">'+
+      '<option value="stahl_lackiert"'+(p.material==="stahl_lackiert"?" selected":"")+'>'+t("materials.stahl_lackiert")+'</option>'+
+      '<option value="edelstahl"'+(p.material==="edelstahl"?" selected":"")+'>'+t("materials.edelstahl")+'</option>'+
+      '<option value="aluminium"'+(p.material==="aluminium"?" selected":"")+'>'+t("materials.aluminium")+'</option>'+
+      '<option value="polyester"'+(p.material==="polyester"?" selected":"")+'>'+t("materials.polyester")+'</option>'+
+      '<option value="doppelwand"'+(p.material==="doppelwand"?" selected":"")+'>'+t("materials.doppelwand")+'</option></select></div></div>'+
+      '<fieldset><legend>'+t("fields.mounting")+'</legend><div class="grid">'+
       '<div><label>'+t("fields.mounting_rear")+'</label><select data-bind="rear" data-step="mounting"><option value="free"'+(p.mounting.rear==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="wall"'+(p.mounting.rear==="wall"?" selected":"")+'>'+t("mounting.wall")+'</option></select></div>'+
       '<div><label>'+t("fields.mounting_sides")+'</label><select data-bind="sides" data-step="mounting"><option value="free"'+(p.mounting.sides==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="row"'+(p.mounting.sides==="row"?" selected":"")+'>'+t("mounting.row")+'</option><option value="wall"'+(p.mounting.sides==="wall"?" selected":"")+'>'+t("mounting.wall")+'</option></select></div>'+
       '<div><label>'+t("fields.mounting_top")+'</label><select data-bind="top" data-step="mounting"><option value="free"'+(p.mounting.top==="free"?" selected":"")+'>'+t("mounting.free")+'</option><option value="covered"'+(p.mounting.top==="covered"?" selected":"")+'>'+t("mounting.covered")+'</option></select></div></div>'+
-      '<div class="hint">Wirksame Oberfläche nach b-Faktoren (IEC TR 60890-Muster) — Nachweis je Fläche im Protokoll.</div></fieldset>'+
+      '<div class="hint">'+t("fields.surface_hint")+'</div></fieldset>'+
       '<div class="btnrow"><span></span><button class="btn" onclick="goto(2)">'+t("common.next")+' →</button></div></div>';
     bindInputs(root);
     renderCustomerSelect();
@@ -290,8 +299,8 @@ function renderStep(){
       numInput(t("fields.tMax"),"tMax","environment")+numInput(t("fields.tExp"),"tExp","environment")+numInput(t("fields.tMin"),"tMin","environment")+
       numInput(t("fields.rh"),"rhPercent","environment","1")+numInput(t("fields.tInMax"),"tInMax","target")+numInput(t("fields.tInMin"),"tInMin","target")+numInput(t("fields.roomHeating"),"roomHeatingK","environment","0.5")+'</div><div class="hint">'+t("fields.roomHeating_hint")+'</div>'+
       '<fieldset><legend>EN 61439-1 / 7.1 Presets</legend><div style="display:flex;gap:8px;flex-wrap:wrap">'+
-      '<button class="btn ghost small" onclick="applyPreset(\'indoor\')">Innenraum: min −5 °C, max +40 °C</button>'+
-      '<button class="btn ghost small" onclick="applyPreset(\'outdoor\')">Freiluft: min −25 °C, max +40 °C</button></div></fieldset>'+
+      '<button class="btn ghost small" onclick="applyPreset(\'indoor\')">'+t("presets.indoor")+'</button>'+
+      '<button class="btn ghost small" onclick="applyPreset(\'outdoor\')">'+t("presets.outdoor")+'</button></div></fieldset>'+
       '<div class="btnrow"><button class="btn ghost" onclick="goto(1)">← '+t("common.back")+'</button><button class="btn" onclick="goto(3)">'+t("common.next")+' →</button></div></div>';
     bindInputs(root);
   }
@@ -315,12 +324,12 @@ function applyPreset(kind){
 
 /* ---------- Komponenten ---------- */
 var COMP_TYPES={
-  direct:{label:"Direkteingabe (Datenblatt)",fields:[["watts","Verlustleistung (W)"]]},
-  power_supply:{label:"Netzteil",fields:[["P_out_W","Ausgangsleistung (W)"],["efficiency","η (leer=0,93)"]]},
-  drive:{label:"Frequenzumrichter",fields:[["P_N_W","Nennleistung (W)"],["efficiency","η (leer=0,97)"]]},
-  transformer:{label:"Trafo",fields:[["P_N_W","Nennleistung (W)"],["efficiency","η (leer=0,95)"]]},
-  motor:{label:"Motor",fields:[["P_mech_W","Mechanische Leistung (W)"],["efficiency","η (leer=0,85)"]]},
-  netfilter:{label:"Netzfilter",fields:[["deltaU_V","Spannungsfall ΔU (V, leer=0,5)"],["I_load_A","Betriebsstrom (A)"]]}
+  direct:{i18n:"comp.direct",fields:[["watts","comp.f_watts"]]},
+  power_supply:{i18n:"comp.power_supply",fields:[["P_out_W","comp.f_p_out"],["efficiency","comp.f_eta"]]},
+  drive:{i18n:"comp.drive",fields:[["P_N_W","comp.f_p_n"],["efficiency","comp.f_eta_drive"]]},
+  transformer:{i18n:"comp.transformer",fields:[["P_N_W","comp.f_p_n"],["efficiency","comp.f_eta_trafo"]]},
+  motor:{i18n:"comp.motor",fields:[["P_mech_W","comp.f_p_mech"],["efficiency","comp.f_eta_motor"]]},
+  netfilter:{i18n:"comp.netfilter",fields:[["deltaU_V","comp.f_du"],["I_load_A","comp.f_i"]]}
 };
 function addEmptyComponent(){
   state.project.components.push({type:"direct",name:"",loadFactor:1,countsAtIdle:false});
@@ -332,15 +341,15 @@ function renderComponentList(el){
     var row=document.createElement("div");
     row.className="card"; row.style.marginBottom="8px"; row.style.padding="12px";
     var fields=COMP_TYPES[c.type].fields.map(function(f){
-      return '<div><label>'+f[1]+'</label><input type="number" step="0.01" value="'+esc(c[f[0]]!=null?c[f[0]]:"")+'" data-ci="'+i+'" data-cf="'+f[0]+'"></div>';
+      return '<div><label>'+t(f[1])+'</label><input type="number" step="0.01" value="'+esc(c[f[0]]!=null?c[f[0]]:"")+'" data-ci="'+i+'" data-cf="'+f[0]+'"></div>';
     }).join("");
     row.innerHTML='<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">'+
-      '<div><label>Bezeichnung</label><input type="text" value="'+esc(c.name||"")+'" data-ci="'+i+'" data-cf="name" data-ctype="text"></div>'+
-      '<div><label>Typ</label><select data-ci="'+i+'" data-cf="type" data-ctype="select">'+
-      Object.keys(COMP_TYPES).map(function(k){ return '<option value="'+k+'"'+(k===c.type?" selected":"")+'>'+COMP_TYPES[k].label+'</option>'; }).join("")+
+      '<div><label>'+t("fields.comp_name")+'</label><input type="text" value="'+esc(c.name||"")+'" data-ci="'+i+'" data-cf="name" data-ctype="text"></div>'+
+      '<div><label>'+t("fields.comp_type")+'</label><select data-ci="'+i+'" data-cf="type" data-ctype="select">'+
+      Object.keys(COMP_TYPES).map(function(k){ return '<option value="'+k+'"'+(k===c.type?" selected":"")+'>'+t(COMP_TYPES[k].i18n)+'</option>'; }).join("")+
       '</select></div>'+fields+
-      '<div><label>Auslastung a (0…1)</label><input type="number" step="0.05" min="0" max="1" value="'+esc(c.loadFactor!=null?c.loadFactor:1)+'" data-ci="'+i+'" data-cf="loadFactor"></div>'+
-      '<div style="display:flex;align-items:flex-end;gap:8px"><label style="display:flex;align-items:center;gap:4px;font-weight:400"><input type="checkbox" style="width:auto" data-ci="'+i+'" data-cf="countsAtIdle" data-ctype="check"'+(c.countsAtIdle?" checked":"")+'> im Stillstand aktiv</label>'+
+      '<div><label>'+t("fields.load_factor")+'</label><input type="number" step="0.05" min="0" max="1" value="'+esc(c.loadFactor!=null?c.loadFactor:1)+'" data-ci="'+i+'" data-cf="loadFactor"></div>'+
+      '<div style="display:flex;align-items:flex-end;gap:8px"><label style="display:flex;align-items:center;gap:4px;font-weight:400"><input type="checkbox" style="width:auto" data-ci="'+i+'" data-cf="countsAtIdle" data-ctype="check"'+(c.countsAtIdle?" checked":"")+'> '+t("fields.active_idle")+'</label>'+
       '<button class="btn ghost small" data-del="'+i+'" style="margin-left:auto">✕</button></div></div>';
     el.appendChild(row);
   });
@@ -371,7 +380,7 @@ function runCalc(){
   try{
     state.lastResult = FlipsiThermKernel.calculate(state.project);
     goto(4);
-  }catch(e){ alert("Eingabefehler: "+e.message); }
+  }catch(e){ alert(t("msg.calc_error")+e.message); }
 }
 
 /* ---------- Ergebnis ---------- */
@@ -383,12 +392,12 @@ function renderResult(){
   var kpi='<div class="kpi">'+
     '<div class="box"><h3>'+t(SOLUTIONS_KEY(r.cooling.solution))+'</h3><div class="val">'+(r.cooling.solution==="cooling_unit"?"≥ "+r.cooling.qCool+" W":r.cooling.solution==="filterfan"?r.cooling.airflow_m3h+" m³/h":"0 W")+'</div><div class="sub">'+t(SOLUTIONS_KEY(r.cooling.solution)).replace(/[A-Za-zäöüß ]+—/,"")+' · '+t("results.q_cool")+': '+r.cooling.qCool+' W</div></div>'+
     (r.cooling.airflow_m3h>0?'<div class="box"><h3>'+t("results.airflow")+'</h3><div class="val">'+r.cooling.airflow_m3h+' m³/h</div><div class="sub">V = 3,1·Q/ΔT</div></div>':"")+
-    '<div class="box"><h3>'+t("results.heater")+'</h3><div class="val">'+r.heating.required+' W</div><div class="sub">'+(r.heating.condensationGoverns?t("results.condensation_note"):"Frostschutz maßgebend")+'</div></div>'+
+    '<div class="box"><h3>'+t("results.heater")+'</h3><div class="val">'+r.heating.required+' W</div><div class="sub">'+(r.heating.condensationGoverns?t("results.condensation_note"):t("results.frost_note"))+'</div></div>'+
     '<div class="box"><h3>'+t("results.dewpoint")+'</h3><div class="val">'+r.heating.dewPoint+' °C</div><div class="sub">Magnus · '+r.heating.tExp+' °C / '+r.environment.rhPercent+' %</div></div></div>';
   var assumptions='<details><summary>'+t("results.assumptions")+' ('+r.assumptions.length+')</summary><div class="inner"><ul>'+
     (r.assumptions.length?r.assumptions.map(function(a){return "<li>"+esc(a)+"</li>";}).join(""):"<li>"+t("results.none")+"</li>")+'</ul></div></details>';
   root.innerHTML=kpi+
-    '<div class="card"><h2>Geräte-Empfehlung</h2><div id="devTable"></div>'+assumptions+
+    '<div class="card"><h2>'+t("results.devices")+'</h2><div id="devTable"></div>'+assumptions+
     '<div class="btnrow"><button class="btn ghost" onclick="goto(3)">← '+t("common.back")+'</button>'+
     '<button class="btn" id="btnPrint">'+t("report.print")+'</button></div></div>';
   renderDeviceSuggestions(document.getElementById("devTable"));
@@ -401,7 +410,7 @@ function renderDeviceSuggestions(el){
   if (r.cooling.solution==="filterfan"){ need.filterluefter=r.cooling.airflow_m3h; need.waermetauscher=r.cooling.qCool; }
   if (r.cooling.solution==="cooling_unit") need.kuehlgeraet=r.cooling.qCool;
   if (r.heating.required>0) need.heizung=r.heating.required;
-  var TYP_LABELS={heizung:"Heizung",filterluefter:"Filterlüfter",waermetauscher:"L/L-Wärmetauscher",kuehlgeraet:"Kühlgerät"};
+  var TYP_LABELS={heizung:t("results.typ_heizung"),filterluefter:t("results.typ_filterluefter"),waermetauscher:t("results.typ_waermetauscher"),kuehlgeraet:t("results.typ_kuehlgeraet")};
   for (var typ in need){
     (function(typ){
       var req=need[typ];
@@ -413,28 +422,28 @@ function renderDeviceSuggestions(el){
       fit.sort(function(a,b){ return (a.leistung_W||a.kuehlleistung_W||((a.waermeleistung_wk||0)*(r.cooling.dT||1)))-(b.leistung_W||b.kuehlleistung_W||((b.waermeleistung_wk||0)*(r.cooling.dT||1))); });
       rows+="<tr><td colspan='5' style='font-weight:600;color:var(--accent-dark);padding-top:12px'>"+TYP_LABELS[typ]+" ≥ "+Math.round(req)+"</td></tr>";
       fit.slice(0,4).forEach(function(d){
-        rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+(d.kuehl_nennbedingung?" <span class='badge'>"+esc(d.kuehl_nennbedingung)+"</span>":"")+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.waermeleistung_wk?d.waermeleistung_wk+" W/K (≈"+Math.round(d.waermeleistung_wk*(r.cooling.dT||1))+" W bei ΔT "+r.cooling.dT+" K)":d.kuehlleistung_W+" W")+(d.artikel_nr?" · Art. "+esc(d.artikel_nr):"")+"</td><td><span class='badge'>"+["","Community","Firma","Projekt"][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ zu verifizieren</span>":"")+"</td><td>"+(d.quell_url?"<a href='"+d.quell_url+"' target='_blank' rel='noopener'>Quelle</a>":"")+"</td></tr>";
+        rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+(d.kuehl_nennbedingung?" <span class='badge'>"+esc(d.kuehl_nennbedingung)+"</span>":"")+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.waermeleistung_wk?d.waermeleistung_wk+" W/K (≈"+Math.round(d.waermeleistung_wk*(r.cooling.dT||1))+" W bei ΔT "+r.cooling.dT+" K)":d.kuehlleistung_W+" W")+(d.artikel_nr?" · Art. "+esc(d.artikel_nr):"")+"</td><td><span class='badge'>"+["",t("results.origin_community"),t("results.origin_firm"),t("results.origin_project")][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ "+t("results.to_verify")+"</span>":"")+"</td><td>"+(d.quell_url?"<a href='"+d.quell_url+"' target='_blank' rel='noopener'>"+t("results.source")+"</a>":"")+"</td></tr>";
       });
-      if (typ==="waermetauscher" && fit.length===0) rows+="<tr><td colspan='5' class='hint'>Kein Wärmetauscher im Katalog — bei Schmutz/Öl-Einsatz selbst ergänzen (Firmen-Katalog).</td></tr>";
+      if (typ==="waermetauscher" && fit.length===0) rows+="<tr><td colspan='5' class='hint'>"+t("results.no_wta")+"</td></tr>";
     })(typ);
   }
-  el.innerHTML="<table><tr><th>Hersteller</th><th>Gerät</th><th>Wert</th><th>Herkunft</th><th></th></tr>"+rows+"</table>"+
-    "<div class='hint'>Katalog-Stand "+EMBEDDED.config.catalogStand+" · ⚠ = Datensatz noch gegen Herstellerkatalog zu verifizieren · Filterlüfter-Werte freiblasend; Gegendruck beachten (Protokoll-Hinweis)</div>";
+  el.innerHTML="<table><tr><th>"+t("results.th_manufacturer")+"</th><th>"+t("results.th_device")+"</th><th>"+t("results.th_value")+"</th><th>"+t("results.th_origin")+"</th><th></th></tr>"+rows+"</table>"+
+    "<div class='hint'>"+t("results.catalog_note").replace("{stand}",EMBEDDED.config.catalogStand)+"</div>";
 }
 
 /* ---------- Protokoll ---------- */
 function reportData(r){
   var p=state.project;
   var rows=[
-    ["ΔT Kühlfall", r.cooling.dT+" K", "ΔT = T_zul,innen − T_um,max", "IEC TR 60890"],
-    ["Hüllabgabe Kühlfall", r.cooling.shellDissipation+" W", "Q = k·A·ΔT", "IEC TR 60890"],
-    ["Kühlbedarf", r.cooling.qCool+" W", "Q_K = P_v − k·A·ΔT", "IEC TR 60890"]
+    ["ΔT "+t("rc.dt_cool"), r.cooling.dT+" K", "ΔT = T_zul,innen − T_um,max", "IEC TR 60890"],
+    [t("rc.shell"), r.cooling.shellDissipation+" W", "Q = k·A·ΔT", "IEC TR 60890"],
+    [t("rc.q_cool"), r.cooling.qCool+" W", "Q_K = P_v − k·A·ΔT", "IEC TR 60890"]
   ];
-  if (r.cooling.airflow_m3h>0) rows.push(["Luftvolumenstrom", r.cooling.airflow_m3h+" m³/h","V = 3,1·Q/ΔT","offene Fachliteratur (ρ·cp, h)"]);
-  rows.push(["Taupunkt (erwartete Umgebung)", r.heating.dewPoint+" °C","Magnus-Formel","gültig 0…60 °C / φ 1–100 %"]);
-  rows.push(["Heizbedarf Frostschutz", r.heating.pFrost+" W","(k·A·ΔT − P_idle)·1,15","IEC TR 60890 + Praxis-Zuschlag 15 %"]);
-  rows.push(["Heizbedarf Betauung", r.heating.pDew+" W","(k·A·(τ − T_min) − P_idle)·1,15","Konvention nach FISEKON-Modell"]);
-  rows.push(["Auslegungs-Heizleistung", r.heating.required+" W","max(Frost, Betauung)","—"]);
+  if (r.cooling.airflow_m3h>0) rows.push([t("rc.airflow"), r.cooling.airflow_m3h+" m³/h","V = 3,1·Q/ΔT",t("rc.airflow_ref")]);
+  rows.push([t("rc.dew"), r.heating.dewPoint+" °C",t("rc.magnus"),t("rc.dew_valid")]);
+  rows.push([t("rc.heating_frost"), r.heating.pFrost+" W","(k·A·ΔT − P_idle)·1,15",t("rc.frost_ref")]);
+  rows.push([t("rc.heating_dew"), r.heating.pDew+" W","(k·A·(τ − T_min) − P_idle)·1,15",t("rc.dew_ref")]);
+  rows.push([t("rc.heating_req"), r.heating.required+" W",t("rc.max_formula"),"—"]);
   var cust = state.customers.find(function(c){ return c.name===p.customer.name; }) || null;
   return {
     customer: p.customer.name||"—",
@@ -445,17 +454,17 @@ function reportData(r){
     sw: r.meta.tool+" v"+r.meta.version,
     catStand: EMBEDDED.config.catalogStand,
     inputs: [
-      ["Schrank B×H×T", p.enclosure.widthB+" × "+p.enclosure.heightH+" × "+p.enclosure.depthT+" m"],
-      ["Werkstoff (k-Wert)", p.material+" (k = "+r.kValue+" W/(m²·K))"],
-      ["Aufstellung", "Rückseite "+p.mounting.rear+" · Seiten "+p.mounting.sides+" · oben "+p.mounting.top],
-      ["Wirksame Oberfläche", r.surface.area+" m² (b-Faktoren, Summe je Fläche siehe unten)"],
-      ["Umgebung", "max "+r.environment.tMax+" °C · erwartet "+r.heating.tExp+" °C · min "+r.environment.tMin+" °C · φ "+r.environment.rhPercent+" %"],
-      ["Ziel-Innentemperatur", "max "+r.target.tInMax+" °C · Heizziel "+r.target.tInMin+" °C"],
-      ["Verlustleistung", r.losses.total+" W (davon im Stillstand: "+r.losses.idle+" W)"]
+      [t("ri.cabinet"), p.enclosure.widthB+" × "+p.enclosure.heightH+" × "+p.enclosure.depthT+" m"],
+      [t("ri.material"), p.material+" (k = "+r.kValue+" W/(m²·K))"],
+      [t("ri.mounting"), t("mounting.rear")+" "+t("mounting."+p.mounting.rear)+" · "+t("mounting.sides")+" "+t("mounting."+p.mounting.sides)+" · "+t("mounting.top")+" "+t("mounting."+p.mounting.top)],
+      [t("ri.surface"), r.surface.area+" "+t("ri.surface_detail")],
+      [t("ri.ambient"), "max "+r.environment.tMax+" °C · "+t("ri.expected")+" "+r.heating.tExp+" °C · min "+r.environment.tMin+" °C · φ "+r.environment.rhPercent+" %"],
+      [t("ri.target"), "max "+r.target.tInMax+" °C · "+t("ri.heating_target")+" "+r.target.tInMin+" °C"],
+      [t("ri.losses"), r.losses.total+" "+t("ri.losses_detail").replace("{idle}", r.losses.idle)]
     ],
     surfaceRows: Object.keys(r.surface.breakdown).map(function(k){
       var b=r.surface.breakdown[k];
-      return [k, "b="+b.factor, (b.raw?b.raw.toFixed(3):"0")+" m² → "+b.area.toFixed(3)+" m²"+(b.raw_note?" ("+b.raw_note+")":"")];
+      return [t("surf."+k), "b="+b.factor, (b.raw?b.raw.toFixed(3):"0")+" m² → "+b.area.toFixed(3)+" m²"+(b.raw_note?" ("+b.raw_note+")":"")];
     }),
     calc: rows,
     assumptions: r.assumptions,
@@ -472,14 +481,14 @@ function buildReport(){
     '<div class="meta">'+d.date+' · '+d.sw+' · '+t("app.cat_stand")+' '+d.catStand+'</div>'+
     '<h2>'+t("report.inputs")+'</h2><table><tbody>'+
     d.inputs.map(function(x){ return "<tr><td style='width:38%'>"+esc(x[0])+"</td><td><b>"+esc(x[1])+"</b></td></tr>"; }).join("")+'</tbody></table>'+
-    '<h2>Wirksame Oberfläche (je Fläche, b-Faktoren)</h2><table><thead><tr><th>Fläche</th><th>Faktor</th><th>Wirksam</th></tr></thead><tbody>'+
+    '<h2>'+t("report.surface_h")+'</h2><table><thead><tr><th>'+t("report.th_surface")+'</th><th>'+t("report.th_factor")+'</th><th>'+t("report.th_effective")+'</th></tr></thead><tbody>'+
     d.surfaceRows.map(function(x){ return "<tr><td>"+esc(x[0])+"</td><td>"+esc(x[1])+"</td><td>"+esc(x[2])+"</td></tr>"; }).join("")+'</tbody></table>'+
-    '<h2>Verlustleistung der Komponenten</h2><table><thead><tr><th>Komponente</th><th>Verlust</th><th>'+t("report.formula")+'</th></tr></thead><tbody>'+
+    '<h2>'+t("report.losses_h")+'</h2><table><thead><tr><th>'+t("report.th_component")+'</th><th>'+t("report.th_loss")+'</th><th>'+t("report.formula")+'</th></tr></thead><tbody>'+
     (d.losses.length?d.losses.map(function(x){ return "<tr><td>"+esc(x.name)+"</td><td><b>"+x.losses+" W</b></td><td>"+esc(x.formula)+"</td></tr>"; }).join(""):"<tr><td colspan=3>—</td></tr>")+'</tbody></table>'+
-    '<h2>'+t("report.calculation")+'</h2><table><thead><tr><th>Größe</th><th>Ergebnis</th><th>'+t("report.formula")+'</th><th>'+t("report.norm")+'</th></tr></thead><tbody>'+
+    '<h2>'+t("report.calculation")+'</h2><table><thead><tr><th>'+t("report.th_qty")+'</th><th>'+t("report.th_result")+'</th><th>'+t("report.formula")+'</th><th>'+t("report.norm")+'</th></tr></thead><tbody>'+
     d.calc.map(function(x){ return "<tr><td>"+esc(x[0])+"</td><td><b>"+esc(x[1])+"</b></td><td>"+esc(x[2])+"</td><td class='norm'>"+esc(x[3])+"</td></tr>"; }).join("")+'</tbody></table>'+
     (d.assumptions.length?("<h2>"+t("results.assumptions")+"</h2><ul style='font-size:.8rem'>"+d.assumptions.map(function(a){return "<li>"+esc(a)+"</li>";}).join("")+"</ul>"):"")+
-    '<div class="foot">'+t("report.footer_note")+' · Norm-Referenzen: '+d.normRefs.map(esc).join(" · ")+'</div></div>';
+    '<div class="foot">'+t("report.footer_note")+' · '+t("report.norm_refs")+': '+d.normRefs.map(esc).join(" · ")+'</div></div>';
   el.style.display="block";
   window.print();
 }
@@ -492,18 +501,18 @@ function saveProject(){
 function loadProject(file){
   file.text().then(function(txt){
     var j=JSON.parse(txt);
-    if (j.flipsitherm_project!=="1") throw new Error("kein FlipsiTherm-Projekt");
+    if (j.flipsitherm_project!=="1" && j.flipsitherm_project!=="2") throw new Error(t("msg.not_project"));
     state.project=j.project; state.customDevs=j.customDevs||[]; state.customers=j.customers||[]; mergeCatalogs(); renderCustomerSelect(); goto(1);
-  }).catch(function(e){ alert("Projektdatei unlesbar: "+e.message); });
+  }).catch(function(e){ alert(t("msg.proj_unreadable")+e.message); });
 }
 function loadCustomCatalog(file){
   file.text().then(function(txt){
     var j=JSON.parse(txt);
-    if (!j.devices) throw new Error("Feld 'devices' fehlt");
-    j.devices.forEach(function(d){ d.layer=2; if(!d.hersteller) d.hersteller=j.hersteller||"Firmenkatalog"; });
+    if (!j.devices) throw new Error(t("msg.devices_missing"));
+    j.devices.forEach(function(d){ d.layer=2; if(!d.hersteller) d.hersteller=j.hersteller||t("msg.firm_default"); });
     state.firmCatalog=j; mergeCatalogs();
-    alert("Firmen-Katalog geladen: "+j.devices.length+" Geräte (nur lokal, bleibt firmenintern)");
-  }).catch(function(e){ alert("Katalogdatei unlesbar: "+e.message); });
+    alert(t("msg.cat_loaded").replace("{n}", j.devices.length));
+  }).catch(function(e){ alert(t("msg.cat_unreadable")+e.message); });
 }
 
 /* ---------- Kundenverwaltung (lokal, niemals öffentlich) ---------- */
@@ -548,7 +557,7 @@ function boot(){
     if (typeof EMBEDDED.lang[l]==="object" && EMBEDDED.lang[l].app) EMBEDDED.lang[l]=flatten(EMBEDDED.lang[l]);
   });
   var sel=document.getElementById("langSel");
-  sel.addEventListener("change",function(){ state.lang=sel.value; applyI18n(); });
+  sel.addEventListener("change",function(){ state.lang=sel.value; if (FlipsiThermKernel.setKernelLang) FlipsiThermKernel.setKernelLang(state.lang); applyI18n(); });
   document.getElementById("btnSave").onclick=saveProject;
   document.getElementById("btnLoad").onclick=function(){ document.getElementById("fileProject").click(); };
   document.getElementById("fileProject").addEventListener("change",function(e){ if(e.target.files[0]) loadProject(e.target.files[0]); });
@@ -571,6 +580,7 @@ function boot(){
     renderCustomerSelect(); renderCustomerList();
   };
   mergeCatalogs(); refreshLangMenu(); sel.value=state.lang;
+  if (FlipsiThermKernel.setKernelLang) FlipsiThermKernel.setKernelLang(state.lang);
   renderSteps(); renderStep(); applyI18n();
   autoRefresh();
 }
