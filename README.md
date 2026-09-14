@@ -25,7 +25,8 @@ Cloud-gebunden, login-pflichtig und empfehlen nur Eigenprodukte. FlipsiTherm ist
 - **Norm-Referenz:** IEC TR 60890 (Temperaturerhöhung, in DE als DIN VDE 0660-507
   geführt) und DIN EN/ÖVE ÖNORM EN 61439-1/-2 (Betriebsbedingungen, Abschnitt 7.1).
 - **Sicher:** Es wird niemals Code nachgeladen — nur Daten (JSON, Kataloge, Sprachen).
-  Manipulierte Daten werden per SHA-256-Prüfsumme erkannt und verworfen.
+  Nachgeladene Daten werden client-seitig per Schema-Validierung geprüft und bei
+  Ungültigkeit verworfen.
 
 ## Benutzung
 
@@ -46,7 +47,8 @@ Kataloge und Sprachen automatisch aktuell geladen.
 | Projekt-Geräte | im Projektfile des Nutzers | Einzelnutzer | nein |
 
 Es existiert **kein Upload-Weg** für Schicht 2/3 — Kundengeräte bleiben firmenintern.
-Lokale Einträge überschreiben zentrale bei Namens-Kollision (Schicht 3 > 2 > 1).
+Bei Namens-Kollision werden alle Einträge gelistet (Reihenfolge: Community, Firma,
+Projekt) — die Auswahl trifft der Nutzer.
 
 ## Sprachen
 

@@ -102,7 +102,8 @@
     "frost_note": "Frost protection governs",
     "condensation_note": "Condensation governs — use heater with hygrostat!",
     "assumptions": "Assumptions made by the kernel",
-    "none": "none"
+    "none": "none",
+    "no_device": "No {typ} ≥ {req} in catalog — add one (Community catalog via PR, or company catalog)."
   },
   "report": {
     "header": "Enclosure climate design report",
@@ -190,6 +191,7 @@
     "hint": "* required field — everything else optional. Customers stay local (browser storage/project file), never on GitHub.",
     "name_required": "Please enter a company name (required).",
     "none": "no customer selected",
-    "projectname": "Project name / order number"
+    "projectname": "Project name / order number",
+    "dup": "This customer already exists (names must be unique) — edit the existing entry instead."
   }
 }

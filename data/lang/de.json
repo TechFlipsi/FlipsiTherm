@@ -102,7 +102,8 @@
     "frost_note": "Frostschutz maßgebend",
     "condensation_note": "Betauung bemessungsrelevant — Heizung mit Hygrostat!",
     "assumptions": "Annahmen des Rechenkerns",
-    "none": "keine"
+    "none": "keine",
+    "no_device": "Kein {typ} ≥ {req} im Katalog — Gerät ergänzen (Community-Katalog per PR, Firmen-Katalog oder Custom-Gerät)."
   },
   "report": {
     "header": "Auslegungsprotokoll Schaltschrankklimatisierung",
@@ -190,6 +191,7 @@
     "hint": "* Pflichtfeld — alles andere optional. Kunden bleiben lokal (Browser-Speicher bzw. Projektfile), niemals auf GitHub.",
     "name_required": "Bitte einen Firmennamen angeben (Pflichtfeld).",
     "none": "kein Kunde gewählt",
-    "projectname": "Projektname / Auftragsnummer"
+    "projectname": "Projektname / Auftragsnummer",
+    "dup": "Dieser Kunde existiert bereits (Name eindeutig) — zum Ändern den bestehenden Eintrag löschen."
   }
 }

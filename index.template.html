@@ -203,7 +203,7 @@ async function autoRefresh(){ // NUR Daten nachladen (JSON) — niemals Code
     fetched = (fetched||[]).filter(function(c,i){ var ok=validateCatalog(c); if(!ok) console.warn("Katalog verworfen (Schema-Fail):", EMBEDDED.config.catalogFiles[i]); return ok; });
     if (fetched.length){
       EMBEDDED.catalogs = fetched;
-      EMBEDDED.config.catalogStand = (fetched[0] && fetched[0].stand) || EMBEDDED.config.catalogStand;
+      EMBEDDED.config.catalogStand = fetched.map(function(c){ return c.stand; }).sort().reverse()[0] || EMBEDDED.config.catalogStand;
     }
     var langIdx = await fetchJSON(DATA_BASE+"data/lang/index.json").catch(function(){ return {languages:[]}; });
     for (var li of (langIdx.languages||[])){
@@ -315,7 +315,7 @@ function renderStep(){
     root.innerHTML='<div class="card"><h2>'+t("steps.3_title")+'</h2><div id="compList"></div>'+
       '<button class="btn ghost small" id="btnAddComp" style="margin-top:10px">+ '+t("fields.add_component")+'</button>'+
       '<div class="btnrow"><button class="btn ghost" onclick="goto(2)">← '+t("common.back")+'</button><button class="btn" id="btnCalc">'+t("common.calculate")+'</button></div>'+
-      '<div id="gateErrors" style="margin-top:10px;font-size:.85rem;color:var(--bad)"></div></div>';
+      '<div id="gateErrors" style="margin-top:10px;font-size:.85rem;color:var(--bad)">'+(state.gateMsg||"")+'</div></div>';
     renderComponentList(root.querySelector("#compList"));
     root.querySelector("#btnAddComp").onclick=function(){ addEmptyComponent(); };
     root.querySelector("#btnCalc").onclick=runCalc;
@@ -383,9 +383,11 @@ function runCalc(){
   if (v.errors.length) msg = v.errors.map(function(e){ return "⛔ "+esc(e); }).join("<br>");
   if (v.warnings.length) msg += (msg?"<br>":"") + v.warnings.map(function(w){ return "⚠ "+esc(w); }).join("<br>");
   if (box) box.innerHTML = msg;
+  state.gateMsg = msg; // Meldung über Schrittwechsel hinweg erhalten
   if (v.errors.length) return; // Pflichtwerte fehlen → kein Schritt 4 (Warnungen erscheinen zusätzlich im Ergebnis)
   try{
     state.lastResult = FlipsiThermKernel.calculate(state.project);
+    state.gateMsg = "";
     goto(4);
   }catch(e){ alert(t("msg.calc_error")+e.message); }
 }
@@ -438,7 +440,7 @@ function renderDeviceSuggestions(el){
       fit.slice(0,4).forEach(function(d){
         rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+(d.kuehl_nennbedingung?" <span class='badge'>"+esc(d.kuehl_nennbedingung)+"</span>":"")+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.waermeleistung_wk?d.waermeleistung_wk+" W/K (≈"+Math.round(d.waermeleistung_wk*(r.cooling.dT||1))+" W bei ΔT "+r.cooling.dT+" K)":d.kuehlleistung_W+" W")+(d.artikel_nr?" · Art. "+esc(d.artikel_nr):"")+"</td><td><span class='badge'>"+["",t("results.origin_community"),t("results.origin_firm"),t("results.origin_project")][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ "+t("results.to_verify")+"</span>":"")+"</td><td>"+(safeUrl(d.quell_url)?"<a href='"+esc(safeUrl(d.quell_url))+"' target='_blank' rel='noopener'>"+t("results.source")+"</a>":"")+"</td></tr>";
       });
-      if (typ==="waermetauscher" && fit.length===0) rows+="<tr><td colspan='5' class='hint'>"+t("results.no_wta")+"</td></tr>";
+      if (fit.length===0) rows+="<tr><td colspan='5' class='hint'>"+(typ==="waermetauscher"?t("results.no_wta"):t("results.no_device").replace("{typ}",TYP_LABELS[typ]).replace("{req}",String(Math.round(req))))+"</td></tr>";
     })(typ);
   }
   el.innerHTML="<table><tr><th>"+t("results.th_manufacturer")+"</th><th>"+t("results.th_device")+"</th><th>"+t("results.th_value")+"</th><th>"+t("results.th_origin")+"</th><th></th></tr>"+rows+"</table>"+
@@ -535,7 +537,7 @@ function loadProject(file){
     incoming.forEach(function(ic){ if(!state.customers.some(function(c){ return c.name===ic.name; })) state.customers.push(ic); });
     saveCustomers(state.customers);
     state.lastResult=null; // altes Ergebnis gehört zum alten Projekt
-    mergeCatalogs(); renderCustomerSelect(); goto(1);
+    mergeCatalogs(); goto(1); renderCustomerSelect(); renderCustomerList();
   }).catch(function(e){ alert(t("msg.proj_unreadable")+e.message); });
 }
 function loadCustomCatalog(file){
@@ -608,6 +610,7 @@ function boot(){
   document.getElementById("btnCustAdd").onclick=function(){
     var n=document.getElementById("custName").value.trim();
     if(!n){ alert(t("customers.name_required")); return; }
+    if (state.customers.some(function(c){ return c.name===n; })) { alert(t("customers.dup")); return; }
     state.customers.push({name:n, contact:document.getElementById("custContact").value.trim(), address:document.getElementById("custAddress").value.trim(), note:document.getElementById("custNote").value.trim()});
     saveCustomers(state.customers);
     document.getElementById("custName").value=""; document.getElementById("custContact").value=""; document.getElementById("custAddress").value=""; document.getElementById("custNote").value="";
