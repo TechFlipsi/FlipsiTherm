@@ -127,10 +127,10 @@
   "surf": {
     "front": "Front",
     "rear": "Rear",
-    "side_left": "Left side",
-    "side_right": "Right side",
     "top": "Top",
-    "bottom": "Bottom"
+    "bottom": "Bottom",
+    "sideLeft": "Left side",
+    "sideRight": "Right side"
   },
   "ri": {
     "cabinet": "Enclosure W×H×D",
@@ -169,7 +169,8 @@
     "devices_missing": "field 'devices' missing",
     "firm_default": "Company catalog",
     "cat_loaded": "Company catalog loaded: {n} devices (local only, stays company-internal)",
-    "custom_catalog": "Load company catalog"
+    "custom_catalog": "Load company catalog",
+    "cat_schema": "Company catalog rejected: schema validation failed (invalid typ field or power values — see docs/KATALOG-SCHEMA.md)"
   },
   "common": {
     "back": "Back",

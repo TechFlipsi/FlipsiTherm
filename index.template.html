@@ -180,11 +180,12 @@ function validateCatalog(c){
   if (!c || !Array.isArray(c.devices) || c.devices.length < 3) return false;
   if (typeof c.hersteller!=="string" || c.hersteller.length<2) return false;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(c.stand||"")) return false;
-  var TYPES={heizung:"leistung_W",filterluefter:"luftstrom_m3h",waermetauscher:"kuehlleistung_W",kuehlgeraet:"kuehlleistung_W"};
+  var TYPES={heizung:"leistung_W",filterluefter:"luftstrom_m3h",waermetauscher:"waermeleistung_wk",kuehlgeraet:"kuehlleistung_W"};
   for (var i=0;i<c.devices.length;i++){
     var d=c.devices[i], vf=TYPES[d.typ];
     if (!vf) return false;
-    if (typeof d[vf]!=="number" || d[vf]<=0) return false;
+    var hasVal = (typeof d[vf]==="number" && d[vf]>0) || (d.typ==="waermetauscher" && typeof d.kuehlleistung_W==="number" && d.kuehlleistung_W>0);
+    if (!hasVal) return false;
     if (typeof d.bezeichnung!=="string" || d.bezeichnung.length<2) return false;
     if (d.status && d.status!=="verifiziert" && d.status!=="zu_verifizieren") return false;
   }
@@ -247,14 +248,20 @@ function goto(n){ state.step=n; renderSteps(); renderStep(); window.scrollTo(0,0
 /* ---------- Eingabehelfer ---------- */
 function getPath(path,key){ return path.split(".").reduce(function(o,k){ return o[k]; }, state.project)[key]; }
 function setPath(path,key,val){ path.split(".").reduce(function(o,k){ return o[k]; }, state.project)[key]=val; }
-function esc(s){ return String(s).replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function safeUrl(u){
+  // Nur http(s) erlauben — blockt javascript:, data:, vbscript: aus Katalog-Daten (XSS)
+  var s = String(u||"").trim();
+  return /^https?:\/\//i.test(s) ? s : null;
+}
 function numInput(label, key, step, stepAttr){
   return '<div><label>'+label+'</label><input type="number" step="'+(stepAttr||"0.1")+'" value="'+esc(getPath(step,key))+'" data-bind="'+key+'" data-step="'+step+'"></div>';
 }
 function bindInputs(container){
   container.querySelectorAll("input[data-bind]").forEach(function(inp){
     inp.addEventListener("input", function(){
-      setPath(inp.getAttribute("data-step"), inp.getAttribute("data-bind"), parseFloat(inp.value||"0"));
+      // Leeres Feld = Wert NICHT angegeben (null) — sonst würden leere Felder als 0 °C gelten
+      setPath(inp.getAttribute("data-step"), inp.getAttribute("data-bind"), inp.value==="" ? null : parseFloat(inp.value));
     });
   });
   container.querySelectorAll("select[data-bind]").forEach(function(sel){
@@ -376,7 +383,7 @@ function runCalc(){
   if (v.errors.length) msg = v.errors.map(function(e){ return "⛔ "+esc(e); }).join("<br>");
   if (v.warnings.length) msg += (msg?"<br>":"") + v.warnings.map(function(w){ return "⚠ "+esc(w); }).join("<br>");
   if (box) box.innerHTML = msg;
-  if (v.errors.length) return; // Pflichtwerte fehlen → kein Schritt 4
+  if (v.errors.length) return; // Pflichtwerte fehlen → kein Schritt 4 (Warnungen erscheinen zusätzlich im Ergebnis)
   try{
     state.lastResult = FlipsiThermKernel.calculate(state.project);
     goto(4);
@@ -384,19 +391,23 @@ function runCalc(){
 }
 
 /* ---------- Ergebnis ---------- */
-var SOLUTION_KEYS={passive:"results.solution_passive",filterfan:"results.solution_filterfan",heatexchanger:"results.solution_heatexchanger",cooling_unit:"results.solution_cooling_unit"};
 function renderResult(){
   var r=state.lastResult;
   var root=document.getElementById("main");
   if(!r){ root.innerHTML='<div class="card">'+t("common.calculate")+'</div>'; return; }
   var kpi='<div class="kpi">'+
-    '<div class="box"><h3>'+t(SOLUTIONS_KEY(r.cooling.solution))+'</h3><div class="val">'+(r.cooling.solution==="cooling_unit"?"≥ "+r.cooling.qCool+" W":r.cooling.solution==="filterfan"?r.cooling.airflow_m3h+" m³/h":"0 W")+'</div><div class="sub">'+t(SOLUTIONS_KEY(r.cooling.solution)).replace(/[A-Za-zäöüß ]+—/,"")+' · '+t("results.q_cool")+': '+r.cooling.qCool+' W</div></div>'+
-    (r.cooling.airflow_m3h>0?'<div class="box"><h3>'+t("results.airflow")+'</h3><div class="val">'+r.cooling.airflow_m3h+' m³/h</div><div class="sub">V = 3,1·Q/ΔT</div></div>':"")+
-    '<div class="box"><h3>'+t("results.heater")+'</h3><div class="val">'+r.heating.required+' W</div><div class="sub">'+(r.heating.condensationGoverns?t("results.condensation_note"):t("results.frost_note"))+'</div></div>'+
-    '<div class="box"><h3>'+t("results.dewpoint")+'</h3><div class="val">'+r.heating.dewPoint+' °C</div><div class="sub">Magnus · '+r.heating.tExp+' °C / '+r.environment.rhPercent+' %</div></div></div>';
+    (r.cooling ?
+      '<div class="box"><h3>'+t(SOLUTIONS_KEY(r.cooling.solution))+'</h3><div class="val">'+(r.cooling.solution==="cooling_unit"?"≥ "+r.cooling.qCool+" W":r.cooling.solution==="filterfan"?r.cooling.airflow_m3h+" m³/h":"0 W")+'</div><div class="sub">'+t(SOLUTIONS_KEY(r.cooling.solution)).replace(/[A-Za-zäöüß ]+—/,"")+' · '+t("results.q_cool")+': '+r.cooling.qCool+' W</div></div>'+
+      (r.cooling.airflow_m3h>0?'<div class="box"><h3>'+t("results.airflow")+'</h3><div class="val">'+r.cooling.airflow_m3h+' m³/h</div><div class="sub">V = 3,1·Q/ΔT</div></div>':"")
+    : "")+
+    (r.heating ?
+      '<div class="box"><h3>'+t("results.heater")+'</h3><div class="val">'+r.heating.required+' W</div><div class="sub">'+(r.heating.condensationGoverns?t("results.condensation_note"):t("results.frost_note"))+'</div></div>'+
+      '<div class="box"><h3>'+t("results.dewpoint")+'</h3><div class="val">'+r.heating.dewPoint+' °C</div><div class="sub">Magnus · '+r.heating.tExp+' °C / '+r.environment.rhPercent+' %</div></div>'
+    : "")+'</div>';
   var assumptions='<details><summary>'+t("results.assumptions")+' ('+r.assumptions.length+')</summary><div class="inner"><ul>'+
     (r.assumptions.length?r.assumptions.map(function(a){return "<li>"+esc(a)+"</li>";}).join(""):"<li>"+t("results.none")+"</li>")+'</ul></div></details>';
-  root.innerHTML=kpi+
+  var warnBox=(r.warnings&&r.warnings.length)?'<div class="card" style="border-color:var(--warn)">'+r.warnings.map(function(w){return "⚠ "+esc(w);}).join("<br>")+'</div>':"";
+  root.innerHTML=warnBox+kpi+
     '<div class="card"><h2>'+t("results.devices")+'</h2><div id="devTable"></div>'+assumptions+
     '<div class="btnrow"><button class="btn ghost" onclick="goto(3)">← '+t("common.back")+'</button>'+
     '<button class="btn" id="btnPrint">'+t("report.print")+'</button></div></div>';
@@ -407,9 +418,9 @@ function SOLUTIONS_KEY(s){ return SOLUTION_KEY_MAP[s]; }
 var SOLUTION_KEY_MAP={passive:"results.solution_passive",filterfan:"results.solution_filterfan",heatexchanger:"results.solution_heatexchanger",cooling_unit:"results.solution_cooling_unit"};
 function renderDeviceSuggestions(el){
   var r=state.lastResult; var rows=""; var need={};
-  if (r.cooling.solution==="filterfan"){ need.filterluefter=r.cooling.airflow_m3h; need.waermetauscher=r.cooling.qCool; }
-  if (r.cooling.solution==="cooling_unit") need.kuehlgeraet=r.cooling.qCool;
-  if (r.heating.required>0) need.heizung=r.heating.required;
+  if (r.cooling && r.cooling.solution==="filterfan"){ need.filterluefter=r.cooling.airflow_m3h; need.waermetauscher=r.cooling.qCool; }
+  if (r.cooling && r.cooling.solution==="cooling_unit") need.kuehlgeraet=r.cooling.qCool;
+  if (r.heating && r.heating.required>0) need.heizung=r.heating.required;
   var TYP_LABELS={heizung:t("results.typ_heizung"),filterluefter:t("results.typ_filterluefter"),waermetauscher:t("results.typ_waermetauscher"),kuehlgeraet:t("results.typ_kuehlgeraet")};
   for (var typ in need){
     (function(typ){
@@ -419,10 +430,13 @@ function renderDeviceSuggestions(el){
          typ==="filterluefter" ? (d.luftstrom_m3h||0)>=req :
          typ==="waermetauscher" ? (d.waermeleistung_wk ? d.waermeleistung_wk*(r.cooling.dT||1)>=req : (d.kuehlleistung_W||0)>=req) :
          (d.kuehlleistung_W||0)>=req); });
-      fit.sort(function(a,b){ return (a.leistung_W||a.kuehlleistung_W||((a.waermeleistung_wk||0)*(r.cooling.dT||1)))-(b.leistung_W||b.kuehlleistung_W||((b.waermeleistung_wk||0)*(r.cooling.dT||1))); });
-      rows+="<tr><td colspan='5' style='font-weight:600;color:var(--accent-dark);padding-top:12px'>"+TYP_LABELS[typ]+" ≥ "+Math.round(req)+"</td></tr>";
+      fit.sort(function(a,b){
+        function val(x){ return typ==="heizung"?(x.leistung_W||0):typ==="filterluefter"?(x.luftstrom_m3h||0):typ==="waermetauscher"?((x.waermeleistung_wk||0)*(r.cooling.dT||1)):(x.kuehlleistung_W||0); }
+        return val(a)-val(b);
+      });
+      rows+="<tr><td colspan='5' style='font-weight:600;color:var(--accent-dark);padding-top:12px'>"+TYP_LABELS[typ]+" ≥ "+Math.round(typ==="heizung"?req*0.9:req)+"</td></tr>";
       fit.slice(0,4).forEach(function(d){
-        rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+(d.kuehl_nennbedingung?" <span class='badge'>"+esc(d.kuehl_nennbedingung)+"</span>":"")+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.waermeleistung_wk?d.waermeleistung_wk+" W/K (≈"+Math.round(d.waermeleistung_wk*(r.cooling.dT||1))+" W bei ΔT "+r.cooling.dT+" K)":d.kuehlleistung_W+" W")+(d.artikel_nr?" · Art. "+esc(d.artikel_nr):"")+"</td><td><span class='badge'>"+["",t("results.origin_community"),t("results.origin_firm"),t("results.origin_project")][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ "+t("results.to_verify")+"</span>":"")+"</td><td>"+(d.quell_url?"<a href='"+d.quell_url+"' target='_blank' rel='noopener'>"+t("results.source")+"</a>":"")+"</td></tr>";
+        rows+="<tr><td>"+esc(d.hersteller)+"</td><td>"+esc(d.bezeichnung)+(d.kuehl_nennbedingung?" <span class='badge'>"+esc(d.kuehl_nennbedingung)+"</span>":"")+"</td><td>"+(d.leistung_W?d.leistung_W+" W":d.waermeleistung_wk?d.waermeleistung_wk+" W/K (≈"+Math.round(d.waermeleistung_wk*(r.cooling.dT||1))+" W bei ΔT "+r.cooling.dT+" K)":d.kuehlleistung_W+" W")+(d.artikel_nr?" · Art. "+esc(d.artikel_nr):"")+"</td><td><span class='badge'>"+["",t("results.origin_community"),t("results.origin_firm"),t("results.origin_project")][d.layer]+"</span>"+(d.status==="zu_verifizieren"?" <span class='badge'>⚠ "+t("results.to_verify")+"</span>":"")+"</td><td>"+(safeUrl(d.quell_url)?"<a href='"+esc(safeUrl(d.quell_url))+"' target='_blank' rel='noopener'>"+t("results.source")+"</a>":"")+"</td></tr>";
       });
       if (typ==="waermetauscher" && fit.length===0) rows+="<tr><td colspan='5' class='hint'>"+t("results.no_wta")+"</td></tr>";
     })(typ);
@@ -434,32 +448,35 @@ function renderDeviceSuggestions(el){
 /* ---------- Protokoll ---------- */
 function reportData(r){
   var p=state.project;
-  var rows=[
-    ["ΔT "+t("rc.dt_cool"), r.cooling.dT+" K", "ΔT = T_zul,innen − T_um,max", "IEC TR 60890"],
-    [t("rc.shell"), r.cooling.shellDissipation+" W", "Q = k·A·ΔT", "IEC TR 60890"],
-    [t("rc.q_cool"), r.cooling.qCool+" W", "Q_K = P_v − k·A·ΔT", "IEC TR 60890"]
-  ];
-  if (r.cooling.airflow_m3h>0) rows.push([t("rc.airflow"), r.cooling.airflow_m3h+" m³/h","V = 3,1·Q/ΔT",t("rc.airflow_ref")]);
-  rows.push([t("rc.dew"), r.heating.dewPoint+" °C",t("rc.magnus"),t("rc.dew_valid")]);
-  rows.push([t("rc.heating_frost"), r.heating.pFrost+" W","(k·A·ΔT − P_idle)·1,15",t("rc.frost_ref")]);
-  rows.push([t("rc.heating_dew"), r.heating.pDew+" W","(k·A·(τ − T_min) − P_idle)·1,15",t("rc.dew_ref")]);
-  rows.push([t("rc.heating_req"), r.heating.required+" W",t("rc.max_formula"),"—"]);
+  var rows=[];
+  if (r.cooling){
+    rows.push(["ΔT "+t("rc.dt_cool"), r.cooling.dT+" K", "ΔT = T_zul,innen − T_um,max", "IEC TR 60890"]);
+    rows.push([t("rc.shell"), r.cooling.shellDissipation+" W", "Q = k·A·ΔT", "IEC TR 60890"]);
+    rows.push([t("rc.q_cool"), r.cooling.qCool+" W", "Q_K = P_v − k·A·ΔT", "IEC TR 60890"]);
+    if (r.cooling.airflow_m3h>0) rows.push([t("rc.airflow"), r.cooling.airflow_m3h+" m³/h","V = 3,1·Q/ΔT",t("rc.airflow_ref")]);
+  }
+  if (r.heating){
+    rows.push([t("rc.dew"), r.heating.dewPoint+" °C",t("rc.magnus"),t("rc.dew_valid")]);
+    rows.push([t("rc.heating_frost"), r.heating.pFrost+" W","(k·A·ΔT − P_idle)·1,15",t("rc.frost_ref")]);
+    rows.push([t("rc.heating_dew"), r.heating.pDew+" W","(k·A·(τ − T_min) − P_idle)·1,15",t("rc.dew_ref")]);
+    rows.push([t("rc.heating_req"), r.heating.required+" W",t("rc.max_formula"),"—"]);
+  }
   var cust = state.customers.find(function(c){ return c.name===p.customer.name; }) || null;
   return {
     customer: p.customer.name||"—",
     ref: p.customer.ref||"",
     custContact: (cust&&cust.contact)||"",
     custAddress: (cust&&cust.address)||"",
-    date: new Date().toLocaleDateString("de-AT"),
+    date: new Date().toLocaleDateString(state.lang==="en" ? "en-GB" : "de-AT"),
     sw: r.meta.tool+" v"+r.meta.version,
     catStand: EMBEDDED.config.catalogStand,
     inputs: [
       [t("ri.cabinet"), p.enclosure.widthB+" × "+p.enclosure.heightH+" × "+p.enclosure.depthT+" m"],
-      [t("ri.material"), p.material+" (k = "+r.kValue+" W/(m²·K))"],
+      [t("ri.material"), t("materials."+p.material)+" (k = "+r.kValue+" W/(m²·K))"],
       [t("ri.mounting"), t("mounting.rear")+" "+t("mounting."+p.mounting.rear)+" · "+t("mounting.sides")+" "+t("mounting."+p.mounting.sides)+" · "+t("mounting.top")+" "+t("mounting."+p.mounting.top)],
       [t("ri.surface"), r.surface.area+" "+t("ri.surface_detail")],
-      [t("ri.ambient"), "max "+r.environment.tMax+" °C · "+t("ri.expected")+" "+r.heating.tExp+" °C · min "+r.environment.tMin+" °C · φ "+r.environment.rhPercent+" %"],
-      [t("ri.target"), "max "+r.target.tInMax+" °C · "+t("ri.heating_target")+" "+r.target.tInMin+" °C"],
+      [t("ri.ambient"), (r.environment.tMax!=null?"max "+r.environment.tMax+" °C · ":"")+(r.heating&&r.heating.tExp!=null?t("ri.expected")+" "+r.heating.tExp+" °C · ":"")+(r.environment.tMin!=null?"min "+r.environment.tMin+" °C · ":"")+"φ "+r.environment.rhPercent+" %"],
+      [t("ri.target"), (r.target.tInMax!=null?"max "+r.target.tInMax+" °C"+(r.target.tInMin!=null?" · ":""):"")+(r.target.tInMin!=null?t("ri.heating_target")+" "+r.target.tInMin+" °C":"")],
       [t("ri.losses"), r.losses.total+" "+t("ri.losses_detail").replace("{idle}", r.losses.idle)]
     ],
     surfaceRows: Object.keys(r.surface.breakdown).map(function(k){
@@ -468,6 +485,7 @@ function reportData(r){
     }),
     calc: rows,
     assumptions: r.assumptions,
+    warnings: r.warnings||[],
     losses: r.losses.details,
     normRefs: r.meta.normRefs
   };
@@ -488,9 +506,11 @@ function buildReport(){
     '<h2>'+t("report.calculation")+'</h2><table><thead><tr><th>'+t("report.th_qty")+'</th><th>'+t("report.th_result")+'</th><th>'+t("report.formula")+'</th><th>'+t("report.norm")+'</th></tr></thead><tbody>'+
     d.calc.map(function(x){ return "<tr><td>"+esc(x[0])+"</td><td><b>"+esc(x[1])+"</b></td><td>"+esc(x[2])+"</td><td class='norm'>"+esc(x[3])+"</td></tr>"; }).join("")+'</tbody></table>'+
     (d.assumptions.length?("<h2>"+t("results.assumptions")+"</h2><ul style='font-size:.8rem'>"+d.assumptions.map(function(a){return "<li>"+esc(a)+"</li>";}).join("")+"</ul>"):"")+
+    (d.warnings&&d.warnings.length?("<h2>"+t("results.warnings")+"</h2><ul style='font-size:.8rem'>"+d.warnings.map(function(wn){return "<li>"+esc(wn)+"</li>";}).join("")+"</ul>"):"")+
     '<div class="foot">'+t("report.footer_note")+' · '+t("report.norm_refs")+': '+d.normRefs.map(esc).join(" · ")+'</div></div>';
   el.style.display="block";
   window.print();
+  el.style.display="none"; // Protokoll nur für den Druck sichtbar
 }
 
 /* ---------- Projekt + Firmen-Katalog ---------- */
@@ -502,7 +522,20 @@ function loadProject(file){
   file.text().then(function(txt){
     var j=JSON.parse(txt);
     if (j.flipsitherm_project!=="1" && j.flipsitherm_project!=="2") throw new Error(t("msg.not_project"));
-    state.project=j.project; state.customDevs=j.customDevs||[]; state.customers=j.customers||[]; mergeCatalogs(); renderCustomerSelect(); goto(1);
+    var p=j.project||{};
+    // Defaults: Projektdateien können Teilfelder fehlen — UI darf nicht crashen
+    p.customer=p.customer||{}; p.customer.name=p.customer.name||""; p.customer.ref=p.customer.ref||"";
+    p.enclosure=p.enclosure||{}; p.mounting=p.mounting||{rear:"free",sides:"free",top:"free",model:"iec60890"};
+    p.environment=p.environment||{}; p.target=p.target||{}; p.components=p.components||[];
+    p.material=p.material||"stahl_lackiert";
+    state.project=p;
+    state.customDevs=j.customDevs||[];
+    // Kunden MERGEN (nach Name) statt ersetzen — Projekt-Load darf den lokalen Stamm nicht löschen
+    var incoming=j.customers||[];
+    incoming.forEach(function(ic){ if(!state.customers.some(function(c){ return c.name===ic.name; })) state.customers.push(ic); });
+    saveCustomers(state.customers);
+    state.lastResult=null; // altes Ergebnis gehört zum alten Projekt
+    mergeCatalogs(); renderCustomerSelect(); goto(1);
   }).catch(function(e){ alert(t("msg.proj_unreadable")+e.message); });
 }
 function loadCustomCatalog(file){
@@ -510,6 +543,7 @@ function loadCustomCatalog(file){
     var j=JSON.parse(txt);
     if (!j.devices) throw new Error(t("msg.devices_missing"));
     j.devices.forEach(function(d){ d.layer=2; if(!d.hersteller) d.hersteller=j.hersteller||t("msg.firm_default"); });
+    if (!validateCatalog(j)) throw new Error(t("msg.cat_schema"));
     state.firmCatalog=j; mergeCatalogs();
     alert(t("msg.cat_loaded").replace("{n}", j.devices.length));
   }).catch(function(e){ alert(t("msg.cat_unreadable")+e.message); });
@@ -560,9 +594,9 @@ function boot(){
   sel.addEventListener("change",function(){ state.lang=sel.value; if (FlipsiThermKernel.setKernelLang) FlipsiThermKernel.setKernelLang(state.lang); applyI18n(); });
   document.getElementById("btnSave").onclick=saveProject;
   document.getElementById("btnLoad").onclick=function(){ document.getElementById("fileProject").click(); };
-  document.getElementById("fileProject").addEventListener("change",function(e){ if(e.target.files[0]) loadProject(e.target.files[0]); });
+  document.getElementById("fileProject").addEventListener("change",function(e){ if(e.target.files[0]) loadProject(e.target.files[0]); e.target.value=""; });
   document.getElementById("btnCustomCat").onclick=function(){ document.getElementById("fileCustomCat").click(); };
-  document.getElementById("fileCustomCat").addEventListener("change",function(e){ if(e.target.files[0]) loadCustomCatalog(e.target.files[0]); });
+  document.getElementById("fileCustomCat").addEventListener("change",function(e){ if(e.target.files[0]) loadCustomCatalog(e.target.files[0]); e.target.value=""; });
   // Theme
   applyTheme();
   document.getElementById("btnTheme").addEventListener("click", toggleTheme);

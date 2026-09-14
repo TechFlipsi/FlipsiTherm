@@ -105,7 +105,11 @@
     top_covered: { de: "abgedeckt", en: "covered" },
     top_free: { de: "frei", en: "free" },
     norm1: { de: "IEC TR 60890 (DE: DIN VDE 0660-507) — Temperaturerhöhung / b-Faktoren", en: "IEC TR 60890 (DE: DIN VDE 0660-507) — temperature rise / b-factors" },
-    norm2: { de: "EN 61439-1 Abschnitt 7.1 — Übliche Betriebsbedingungen", en: "EN 61439-1 section 7.1 — ordinary operating conditions" }
+    norm2: { de: "EN 61439-1 Abschnitt 7.1 — Übliche Betriebsbedingungen", en: "EN 61439-1 section 7.1 — ordinary operating conditions" },
+    warn_tinmin_gt_tinmax: { de: "Heizziel-Innentemperatur ist HÖHER als die zulässige Innentemperatur — Werte prüfen (untypisch)", en: "Heating-target interior temperature is HIGHER than the permissible interior temperature — check values (atypical)" },
+    warn_tmin_gt_tmax: { de: "Minimale Umgebungstemperatur ist HÖHER als die maximale — Werte vertauscht?", en: "Minimum ambient temperature is HIGHER than the maximum — values swapped?" },
+    note_no_heating: { de: "Keine Heizleistung erforderlich: die Hülle deckt den Bedarf ab bzw. das Heizziel liegt auf/unter der Umgebungstemperatur.", en: "No heating power required: the shell covers the demand, or the heating target is at/below ambient temperature." },
+    warn_magnus_range: { de: "Taupunkt-Formel (Magnus) außerhalb der Gültigkeit (0…60 °C): tExp={v} °C — Ergebnis nur näherungsweise.", en: "Dew-point formula (Magnus) outside its validity range (0…60 °C): tExp={v} °C — result is approximate only." }
   };
   function tr(key, vars) {
     var s = MSG[key] ? MSG[key][kernelLang] : key;
@@ -254,12 +258,11 @@
     need(inRange(e.depthT, 0.05, 3), tr("depth_range"));
     need(K_VALUES[input.material] != null, tr("material_missing"));
 
-    var hasCooling = inRange(env.tMax, -55, 70) && inRange(tgt.tInMax, 0, 80);
-    var hasHeating = inRange(env.tMin, -55, 20);
+    var hasCooling = env.tMax != null && inRange(env.tMax, -55, 70) && tgt.tInMax != null && inRange(tgt.tInMax, 0, 80);
+    var hasHeating = env.tMin != null && inRange(env.tMin, -55, 20);
     if (!hasCooling && !hasHeating) {
       errors.push(tr("no_case"));
     }
-    if (inRange(env.tMax, -55, 70) !== !!env.tMax && env.tMax != null && !inRange(env.tMax, -55, 70)) errors.push(tr("tmax_implausible"));
     if (env.tMax != null && !inRange(env.tMax, -55, 70)) errors.push(tr("tmax_implausible"));
     if (tgt.tInMax != null && !inRange(tgt.tInMax, 0, 80)) errors.push(tr("tinmax_implausible"));
     if (env.tMin != null && !inRange(env.tMin, -55, 20)) errors.push(tr("tmin_implausible"));
@@ -279,6 +282,12 @@
     }
     if (env.tExp != null && env.tMax != null && env.tExp > env.tMax) {
       warnings.push(tr("warn_texp_gt_tmax"));
+    }
+    if (tgt.tInMin != null && tgt.tInMax != null && tgt.tInMin > tgt.tInMax) {
+      warnings.push(tr("warn_tinmin_gt_tinmax"));
+    }
+    if (env.tMin != null && env.tMax != null && env.tMin > env.tMax) {
+      warnings.push(tr("warn_tmin_gt_tmax"));
     }
 
     (input.components || []).forEach(function (c, i) {
@@ -313,7 +322,7 @@
     var e = input.enclosure;
     var m = input.mounting || {};
     var env0 = input.environment;
-    var tgt = input.target;
+    var tgt = input.target || {};
     var roomK = env0.roomHeatingK || 0;
 
     // Raumaufheizung durch benachbarte Anlagen: wirkt auf alle Umgebungstemperaturen
@@ -322,7 +331,8 @@
       tExp: env0.tExp != null ? round(env0.tExp + roomK, 1) : null,
       tMin: env0.tMin != null ? round(env0.tMin + roomK, 1) : null,
       rhPercent: env0.rhPercent,
-      roomHeatingK: roomK
+      roomHeatingK: roomK,
+      altitude_m: env0.altitude_m
     };
 
     var losses = internalLosses(input.components || []);
@@ -336,9 +346,9 @@
       assumptions.push(tr("altitude", {alt: env.altitude_m}));
     }
 
-    // --- Kühlung (optional) ---
+    // --- Kühlung (optional) — Zweig nur, wenn Kühl-Eingaben vollständig angegeben ---
     var cooling = null;
-    if (env.tMax != null && tgt.tInMax != null) {
+    if (v.hasCooling) {
       var dT_cool = tgt.tInMax - env.tMax;
       var shellDiss_cool = k * surf.area * Math.max(dT_cool, 0);
       var qCool = round(Math.max(0, losses.total - shellDiss_cool), 1);
@@ -361,14 +371,15 @@
       };
     }
 
-    // --- Heizung (optional) ---
+    // --- Heizung (optional) — Zweig nur, wenn Heiz-Eingabe angegeben ---
     var heating = null;
-    if (env.tMin != null) {
+    if (v.hasHeating) {
       var tInMin = tgt.tInMin == null ? DEFAULT_TINMIN : tgt.tInMin;
       var tExp = env.tExp == null ? DEFAULT_TEXP : env.tExp;
       if (env0.tExp == null) { assumptions.push(tr("texp_default", {v: DEFAULT_TEXP})); }
       if (tgt.tInMin == null) { assumptions.push(tr("tinmin_default", {v: tInMin})); }
       var dewRef = dewPoint(tExp, env.rhPercent);
+      if (tExp < 0 || tExp > 60) { assumptions.push(tr("warn_magnus_range", {v: tExp})); }
       var dT_heat_frost = tInMin - env.tMin;
       var dT_heat_dew = dewRef - env.tMin;
       var loss_frost = k * surf.area * Math.max(dT_heat_frost, 0);
@@ -392,15 +403,17 @@
         pDew: pDew,
         required: pHeater,
         condensationGoverns: condensationGoverns,
-        note: condensationGoverns
+        note: pHeater <= 0
+          ? tr("note_no_heating")
+          : (condensationGoverns
           ? tr("note_condensation", {d: round(dewRef, 1), e: tExp, rh: env.rhPercent, m: env.tMin})
-          : tr("note_frost")
+          : tr("note_frost"))
       };
     }
 
     return {
       meta: {
-        tool: "FlipsiTherm", version: "0.2.0",
+        tool: "FlipsiTherm", version: "0.2.3",
         normRefs: [
           tr("norm1"), tr("norm2")
         ]

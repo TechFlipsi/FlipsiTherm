@@ -127,10 +127,10 @@
   "surf": {
     "front": "Front",
     "rear": "Rückseite",
-    "side_left": "Seite links",
-    "side_right": "Seite rechts",
     "top": "Deckfläche",
-    "bottom": "Boden"
+    "bottom": "Boden",
+    "sideLeft": "Seite links",
+    "sideRight": "Seite rechts"
   },
   "ri": {
     "cabinet": "Schrank B×H×T",
@@ -169,7 +169,8 @@
     "devices_missing": "Feld 'devices' fehlt",
     "firm_default": "Firmenkatalog",
     "cat_loaded": "Firmen-Katalog geladen: {n} Geräte (nur lokal, bleibt firmenintern)",
-    "custom_catalog": "Firmen-Katalog laden"
+    "custom_catalog": "Firmen-Katalog laden",
+    "cat_schema": "Firmen-Katalog verworfen: Schema-Prüfung fehlgeschlagen (typ-Feld oder Leistungswerte ungültig — siehe docs/KATALOG-SCHEMA.md)"
   },
   "common": {
     "back": "Zurück",

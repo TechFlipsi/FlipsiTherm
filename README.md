@@ -72,8 +72,8 @@ im Protokoll je Ergebniszeile ausgewiesen (Formel + Quelle). Grundmodell:
 
 **v0.2.1 — Rechenkern + UI + verifizierter Katalog.** 84 Geräte von 4 Herstellern
 (Rittal, Pfannenberg, nVent Hoffman, STEGO), davon **83/84 (99 %) mit Quellen-URL
-verifiziert** (`status: "verifiziert"`, Stichdatum je Datensatz). 64 automatisierte
-Tests (Kernel, Katalog-Schema, UI) in CI. Offen: Golden-File-Validierungsbericht
+verifiziert** (`status: "verifiziert"`, Stichdatum je Datensatz). 68 automatisierte
+Tests (Kernel, Katalog-Schema, UI, Zweig-Unabhängigkeit) in CI. Offen: Golden-File-Validierungsbericht
 gegen veröffentlichte Beispielrechnungen — Korrekturen sehr willkommen (PR oder Issue).
 
 ## Mitmachen

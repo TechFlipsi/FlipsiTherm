@@ -1,11 +1,11 @@
 {
   "name": "flipsitherm",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Herstellerneutrale Schaltschrank-Klimaauslegung — offline, ohne Installation, offene Rechnung",
   "license": "MIT",
   "author": "TechFlipsi",
   "scripts": {
-    "test": "node test/kernel.test.js && node test/catalog.test.js && node test/ui.test.js && node test/v02.test.js",
+    "test": "node test/kernel.test.js && node test/catalog.test.js && node test/ui.test.js && node test/v02.test.js && node test/branch.ui.test.js && node test/edge.verify.js",
     "build": "node build.js"
   },
   "devDependencies": {
